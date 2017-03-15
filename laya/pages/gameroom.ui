@@ -2,7 +2,7 @@
     "x":0,
     "type":"View",
     "selectedBox":1,
-    "selecteID":13,
+    "selecteID":2,
     "props":{"width":768,"sceneColor":"#000000","height":1024},
     "nodeParent":-1,
     "label":"View",
@@ -100,7 +100,7 @@
             "x":15,
             "type":"UIView",
             "source":"ubut.ui",
-            "props":{"y":781,"x":189,"var":"ubut01"},
+            "props":{"y":785,"x":174,"var":"ubut01"},
             "nodeParent":1,
             "label":"UIView(ubut01)",
             "isDirectory":false,
@@ -114,7 +114,7 @@
             "x":15,
             "type":"UIView",
             "source":"ubut.ui",
-            "props":{"y":653,"x":207,"var":"ubut02"},
+            "props":{"y":654,"x":207,"var":"ubut02"},
             "nodeParent":1,
             "label":"UIView(ubut02)",
             "isDirectory":false,
@@ -128,7 +128,7 @@
             "x":15,
             "type":"UIView",
             "source":"ubut.ui",
-            "props":{"y":607,"x":334,"var":"ubut03"},
+            "props":{"y":602,"x":334,"var":"ubut03"},
             "nodeParent":1,
             "label":"UIView(ubut03)",
             "isDirectory":false,
@@ -142,7 +142,7 @@
             "x":15,
             "type":"UIView",
             "source":"ubut.ui",
-            "props":{"y":653,"x":464,"var":"ubut04"},
+            "props":{"y":654,"x":459,"var":"ubut04"},
             "nodeParent":1,
             "label":"UIView(ubut04)",
             "isDirectory":false,
@@ -156,7 +156,7 @@
             "x":15,
             "type":"UIView",
             "source":"ubut.ui",
-            "props":{"y":781,"x":500,"var":"ubut05"},
+            "props":{"y":785,"x":486,"var":"ubut05"},
             "nodeParent":1,
             "label":"UIView(ubut05)",
             "isDirectory":false,
@@ -254,6 +254,266 @@
             "isAniNode":true,
             "hasChild":false,
             "compId":20,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":902,"x":324,"var":"lookcards","skin":"game/look.png"},
+            "nodeParent":1,
+            "label":"Image(lookcards)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":21,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":236,"x":86,"width":100,"var":"umaskleft01","skin":"game/mask.png","sizeGrid":"10,10,10,10","height":144},
+            "nodeParent":1,
+            "label":"Image(umaskleft01)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":22,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":442,"x":86,"width":100,"var":"umaskleft02","skin":"game/mask.png","sizeGrid":"10,10,10,10","height":144},
+            "nodeParent":1,
+            "label":"Image(umaskleft02)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":23,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":236,"x":588,"width":100,"var":"umaskright01","skin":"game/mask.png","sizeGrid":"10,10,10,10","height":144},
+            "nodeParent":1,
+            "label":"Image(umaskright01)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":24,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":440,"x":588,"width":100,"var":"umaskright02","skin":"game/mask.png","sizeGrid":"10,10,10,10","height":144},
+            "nodeParent":1,
+            "label":"Image(umaskright02)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":25,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":732,"x":334,"width":100,"var":"umaskmy","skin":"game/mask.png","sizeGrid":"10,10,10,10","height":144},
+            "nodeParent":1,
+            "label":"Image(umaskmy)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":26,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":340,"x":205,"var":"uxianleft01","skin":"game/xian.png"},
+            "nodeParent":1,
+            "label":"Image(uxianleft01)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":27,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":555,"x":200,"var":"uxianleft02","skin":"game/xian.png"},
+            "nodeParent":1,
+            "label":"Image(uxianleft02)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":28,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":340,"x":540,"var":"uxianright01","skin":"game/xian.png"},
+            "nodeParent":1,
+            "label":"Image(uxianright01)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":29,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":555,"x":541,"var":"uxianright02","skin":"game/xian.png"},
+            "nodeParent":1,
+            "label":"Image(uxianright02)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":30,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":846,"x":454,"var":"uxianmy","skin":"game/xian.png"},
+            "nodeParent":1,
+            "label":"Image(uxianmy)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":31,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Label",
+            "props":{"y":244,"x":194,"width":59,"var":"uqileft01","text":"弃牌","styleSkin":"game/label.png","height":28,"fontSize":24,"color":"#ffffff"},
+            "nodeParent":1,
+            "label":"Label(uqileft01)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":37,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Label",
+            "props":{"y":244,"x":514,"width":59,"var":"uqiright01","text":"弃牌","styleSkin":"game/label.png","height":28,"fontSize":24,"color":"#ffffff"},
+            "nodeParent":1,
+            "label":"Label(uqiright01)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":38,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Label",
+            "props":{"y":447,"x":194,"width":59,"var":"uqileft02","text":"弃牌","styleSkin":"game/label.png","height":28,"fontSize":24,"color":"#ffffff"},
+            "nodeParent":1,
+            "label":"Label(uqileft02)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":39,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Label",
+            "props":{"y":447,"x":514,"width":59,"var":"uqiright02","text":"弃牌","styleSkin":"game/label.png","height":28,"fontSize":24,"color":"#ffffff"},
+            "nodeParent":1,
+            "label":"Label(uqiright02)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":40,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Label",
+            "props":{"y":740,"x":447,"width":59,"var":"uqimy","text":"弃牌","styleSkin":"game/label.png","height":28,"fontSize":24,"color":"#ffffff"},
+            "nodeParent":1,
+            "label":"Label(uqimy)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":41,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":236,"x":508,"width":180,"var":"uframer01","skin":"game/userframe.png","sizeGrid":"16,16,16,16","height":144},
+            "nodeParent":1,
+            "label":"Image(uframer01)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":43,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":440,"x":508,"width":180,"var":"uframer02","skin":"game/userframe.png","sizeGrid":"16,16,16,16","height":144},
+            "nodeParent":1,
+            "label":"Image(uframer02)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":44,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":442,"x":86,"width":180,"var":"uframel02","skin":"game/userframe.png","sizeGrid":"16,16,16,16","height":144},
+            "nodeParent":1,
+            "label":"Image(uframel02)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":45,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Image",
+            "props":{"y":236,"x":86,"width":180,"var":"uframel01","skin":"game/userframe.png","sizeGrid":"16,16,16,16","height":144},
+            "nodeParent":1,
+            "label":"Image(uframel01)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":46,
             "child":[
                 ]
         }],

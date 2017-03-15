@@ -3,7 +3,7 @@ var GameMain = (function () {
     function GameMain() {
         Laya.init(768, 1024);
         // Laya.init(Laya.Browser.clientWidth, Laya.Browser.clientHeight);
-        Laya.stage.scaleMode = Laya.Stage.SCALE_NOSCALE;
+        Laya.stage.scaleMode = Laya.Stage.SCALE_SHOWALL;
         Laya.stage.alignH = Laya.Stage.ALIGN_CENTER;
         Laya.stage.alignV = Laya.Stage.ALIGN_MIDDLE;
         Laya.stage.screenMode = Laya.Stage.SCREEN_VERTICAL;

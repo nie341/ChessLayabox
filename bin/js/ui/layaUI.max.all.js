@@ -7,6 +7,51 @@ var View = laya.ui.View;
 var Dialog = laya.ui.Dialog;
 var ui;
 (function (ui) {
+    var addchipUI = (function (_super) {
+        __extends(addchipUI, _super);
+        function addchipUI() {
+            return _super.call(this) || this;
+        }
+        addchipUI.prototype.createChildren = function () {
+            _super.prototype.createChildren.call(this);
+            this.createView(ui.addchipUI.uiView);
+        };
+        return addchipUI;
+    }(Dialog));
+    addchipUI.uiView = { "type": "Dialog", "props": { "width": 768, "height": 200 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 768, "skin": "game/smallbg.png", "sizeGrid": "5,5,5,5", "height": 200 } }, { "type": "Button", "props": { "y": 25, "x": 17, "width": 160, "var": "but01", "stateNum": "1", "skin": "game/chip01.png", "labelStrokeColor": "#000000", "labelSize": 38, "label": "300", "height": 160 } }, { "type": "Button", "props": { "y": 25, "x": 209, "width": 160, "var": "but02", "stateNum": "1", "skin": "game/chip02.png", "labelStrokeColor": "#000000", "labelSize": 38, "label": "500", "height": 160 } }, { "type": "Button", "props": { "y": 25, "x": 400, "width": 160, "var": "but03", "stateNum": "1", "skin": "game/chip03.png", "labelStrokeColor": "#000000", "labelSize": 38, "label": "800", "height": 160 } }, { "type": "Button", "props": { "y": 25, "x": 592, "width": 160, "var": "but04", "stateNum": "1", "skin": "game/chip04.png", "labelStrokeColor": "#000000", "labelSize": 38, "label": "1000", "height": 160 } }] };
+    ui.addchipUI = addchipUI;
+})(ui || (ui = {}));
+(function (ui) {
+    var chipUI = (function (_super) {
+        __extends(chipUI, _super);
+        function chipUI() {
+            return _super.call(this) || this;
+        }
+        chipUI.prototype.createChildren = function () {
+            _super.prototype.createChildren.call(this);
+            this.createView(ui.chipUI.uiView);
+        };
+        return chipUI;
+    }(View));
+    chipUI.uiView = { "type": "View", "props": { "width": 52, "height": 58 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 52, "var": "bg", "skin": "chip/chip01.png", "height": 58 } }, { "type": "Label", "props": { "y": 21, "x": 3, "width": 44, "var": "money", "text": "200", "height": 12, "fontSize": 13, "align": "center" } }] };
+    ui.chipUI = chipUI;
+})(ui || (ui = {}));
+(function (ui) {
+    var chipbigUI = (function (_super) {
+        __extends(chipbigUI, _super);
+        function chipbigUI() {
+            return _super.call(this) || this;
+        }
+        chipbigUI.prototype.createChildren = function () {
+            _super.prototype.createChildren.call(this);
+            this.createView(ui.chipbigUI.uiView);
+        };
+        return chipbigUI;
+    }(View));
+    chipbigUI.uiView = { "type": "View", "props": { "width": 84, "height": 40 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "skin": "chip/chip00.png" } }, { "type": "Label", "props": { "y": 5, "x": 14, "width": 56, "text": "1万", "height": 26, "fontSize": 26, "align": "center" } }] };
+    ui.chipbigUI = chipbigUI;
+})(ui || (ui = {}));
+(function (ui) {
     var gameroomUI = (function (_super) {
         __extends(gameroomUI, _super);
         function gameroomUI() {
@@ -20,7 +65,7 @@ var ui;
         };
         return gameroomUI;
     }(View));
-    gameroomUI.uiView = { "type": "View", "props": { "width": 768, "height": 1024 }, "child": [{ "type": "Image", "props": { "y": 0, "x": -1.5, "skin": "room_bg.png" } }, { "type": "user", "props": { "y": 236, "x": 86, "var": "userleft01", "runtime": "ui.userUI" } }, { "type": "user", "props": { "y": 442, "x": 86, "var": "userleft02", "runtime": "ui.userUI" } }, { "type": "user", "props": { "y": 236, "x": 588, "var": "userright01", "runtime": "ui.userUI" } }, { "type": "user", "props": { "y": 442, "x": 588, "var": "userright02", "runtime": "ui.userUI" } }, { "type": "user", "props": { "y": 732, "x": 334, "var": "usermy", "runtime": "ui.userUI" } }, { "type": "ubut", "props": { "y": 781, "x": 189, "var": "ubut01", "runtime": "ui.ubutUI" } }, { "type": "ubut", "props": { "y": 653, "x": 207, "var": "ubut02", "runtime": "ui.ubutUI" } }, { "type": "ubut", "props": { "y": 607, "x": 334, "var": "ubut03", "runtime": "ui.ubutUI" } }, { "type": "ubut", "props": { "y": 653, "x": 464, "var": "ubut04", "runtime": "ui.ubutUI" } }, { "type": "ubut", "props": { "y": 781, "x": 500, "var": "ubut05", "runtime": "ui.ubutUI" } }, { "type": "Image", "props": { "y": 2, "x": 305, "width": 146, "var": "npc", "skin": "game/npc.png", "height": 176 } }, { "type": "Image", "props": { "y": 235, "x": 331, "width": 106, "skin": "game/smallbg.png", "sizeGrid": "10,10,10,10", "height": 33 } }, { "type": "Image", "props": { "y": 232, "x": 314, "skin": "game/chipsmall.png" } }, { "type": "Label", "props": { "y": 241, "x": 354, "width": 70, "var": "chippool", "text": "label", "height": 23, "fontSize": 20, "color": "#ffface" } }, { "type": "Label", "props": { "y": 275, "x": 351, "width": 66, "var": "round", "text": "label", "height": 22, "fontSize": 20, "color": "#116941" } }, { "type": "Label", "props": { "y": 210, "x": 281, "width": 183, "var": "tips02", "text": "label", "height": 22, "fontSize": 20, "color": "#116941" } }, { "type": "Label", "props": { "y": 188, "x": 284, "width": 204, "var": "tips01", "text": "label", "height": 22, "fontSize": 20, "color": "#116941" } }] };
+    gameroomUI.uiView = { "type": "View", "props": { "width": 768, "height": 1024 }, "child": [{ "type": "Image", "props": { "y": 0, "x": -1.5, "skin": "room_bg.png" } }, { "type": "user", "props": { "y": 236, "x": 86, "var": "userleft01", "runtime": "ui.userUI" } }, { "type": "user", "props": { "y": 442, "x": 86, "var": "userleft02", "runtime": "ui.userUI" } }, { "type": "user", "props": { "y": 236, "x": 588, "var": "userright01", "runtime": "ui.userUI" } }, { "type": "user", "props": { "y": 442, "x": 588, "var": "userright02", "runtime": "ui.userUI" } }, { "type": "user", "props": { "y": 732, "x": 334, "var": "usermy", "runtime": "ui.userUI" } }, { "type": "ubut", "props": { "y": 785, "x": 174, "var": "ubut01", "runtime": "ui.ubutUI" } }, { "type": "ubut", "props": { "y": 654, "x": 207, "var": "ubut02", "runtime": "ui.ubutUI" } }, { "type": "ubut", "props": { "y": 602, "x": 334, "var": "ubut03", "runtime": "ui.ubutUI" } }, { "type": "ubut", "props": { "y": 654, "x": 459, "var": "ubut04", "runtime": "ui.ubutUI" } }, { "type": "ubut", "props": { "y": 785, "x": 486, "var": "ubut05", "runtime": "ui.ubutUI" } }, { "type": "Image", "props": { "y": 2, "x": 305, "width": 146, "var": "npc", "skin": "game/npc.png", "height": 176 } }, { "type": "Image", "props": { "y": 235, "x": 331, "width": 106, "skin": "game/smallbg.png", "sizeGrid": "10,10,10,10", "height": 33 } }, { "type": "Image", "props": { "y": 232, "x": 314, "skin": "game/chipsmall.png" } }, { "type": "Label", "props": { "y": 241, "x": 354, "width": 70, "var": "chippool", "text": "label", "height": 23, "fontSize": 20, "color": "#ffface" } }, { "type": "Label", "props": { "y": 275, "x": 351, "width": 66, "var": "round", "text": "label", "height": 22, "fontSize": 20, "color": "#116941" } }, { "type": "Label", "props": { "y": 210, "x": 281, "width": 183, "var": "tips02", "text": "label", "height": 22, "fontSize": 20, "color": "#116941" } }, { "type": "Label", "props": { "y": 188, "x": 284, "width": 204, "var": "tips01", "text": "label", "height": 22, "fontSize": 20, "color": "#116941" } }, { "type": "Image", "props": { "y": 902, "x": 324, "var": "lookcards", "skin": "game/look.png" } }, { "type": "Image", "props": { "y": 236, "x": 86, "width": 100, "var": "umaskleft01", "skin": "game/mask.png", "sizeGrid": "10,10,10,10", "height": 144 } }, { "type": "Image", "props": { "y": 442, "x": 86, "width": 100, "var": "umaskleft02", "skin": "game/mask.png", "sizeGrid": "10,10,10,10", "height": 144 } }, { "type": "Image", "props": { "y": 236, "x": 588, "width": 100, "var": "umaskright01", "skin": "game/mask.png", "sizeGrid": "10,10,10,10", "height": 144 } }, { "type": "Image", "props": { "y": 440, "x": 588, "width": 100, "var": "umaskright02", "skin": "game/mask.png", "sizeGrid": "10,10,10,10", "height": 144 } }, { "type": "Image", "props": { "y": 732, "x": 334, "width": 100, "var": "umaskmy", "skin": "game/mask.png", "sizeGrid": "10,10,10,10", "height": 144 } }, { "type": "Image", "props": { "y": 340, "x": 205, "var": "uxianleft01", "skin": "game/xian.png" } }, { "type": "Image", "props": { "y": 555, "x": 200, "var": "uxianleft02", "skin": "game/xian.png" } }, { "type": "Image", "props": { "y": 340, "x": 540, "var": "uxianright01", "skin": "game/xian.png" } }, { "type": "Image", "props": { "y": 555, "x": 541, "var": "uxianright02", "skin": "game/xian.png" } }, { "type": "Image", "props": { "y": 846, "x": 454, "var": "uxianmy", "skin": "game/xian.png" } }, { "type": "Label", "props": { "y": 244, "x": 194, "width": 59, "var": "uqileft01", "text": "弃牌", "height": 28, "fontSize": 24, "color": "#ffffff" } }, { "type": "Label", "props": { "y": 244, "x": 514, "width": 59, "var": "uqiright01", "text": "弃牌", "height": 28, "fontSize": 24, "color": "#ffffff" } }, { "type": "Label", "props": { "y": 447, "x": 194, "width": 59, "var": "uqileft02", "text": "弃牌", "height": 28, "fontSize": 24, "color": "#ffffff" } }, { "type": "Label", "props": { "y": 447, "x": 514, "width": 59, "var": "uqiright02", "text": "弃牌", "height": 28, "fontSize": 24, "color": "#ffffff" } }, { "type": "Label", "props": { "y": 740, "x": 447, "width": 59, "var": "uqimy", "text": "弃牌", "height": 28, "fontSize": 24, "color": "#ffffff" } }, { "type": "Image", "props": { "y": 236, "x": 508, "width": 180, "var": "uframer01", "skin": "game/userframe.png", "sizeGrid": "16,16,16,16", "height": 144 } }, { "type": "Image", "props": { "y": 440, "x": 508, "width": 180, "var": "uframer02", "skin": "game/userframe.png", "sizeGrid": "16,16,16,16", "height": 144 } }, { "type": "Image", "props": { "y": 442, "x": 86, "width": 180, "var": "uframel02", "skin": "game/userframe.png", "sizeGrid": "16,16,16,16", "height": 144 } }, { "type": "Image", "props": { "y": 236, "x": 86, "width": 180, "var": "uframel01", "skin": "game/userframe.png", "sizeGrid": "16,16,16,16", "height": 144 } }] };
     ui.gameroomUI = gameroomUI;
 })(ui || (ui = {}));
 (function (ui) {
@@ -37,6 +82,52 @@ var ui;
     }(View));
     gamoloadingUI.uiView = { "type": "View", "props": { "width": 768, "height": 1024 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 768, "skin": "comp/bg.png", "sizeGrid": "26,5,5,5", "height": 1024 } }, { "type": "ProgressBar", "props": { "y": 505, "x": 77.99999999999993, "width": 611, "var": "pb", "value": 0, "skin": "comp/progress.png", "height": 14 } }] };
     ui.gamoloadingUI = gamoloadingUI;
+})(ui || (ui = {}));
+(function (ui) {
+    var pkUI = (function (_super) {
+        __extends(pkUI, _super);
+        function pkUI() {
+            return _super.call(this) || this;
+        }
+        pkUI.prototype.createChildren = function () {
+            View.regComponent("ui.userUI", ui.userUI);
+            _super.prototype.createChildren.call(this);
+            this.createView(ui.pkUI.uiView);
+        };
+        return pkUI;
+    }(Dialog));
+    pkUI.uiView = { "type": "Dialog", "props": { "width": 768, "height": 290 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 432, "skin": "game/pkl.png", "sizeGrid": "0,98,0,0", "height": 204 } }, { "type": "Image", "props": { "y": 86, "x": 302, "width": 466, "skin": "game/pkr.png", "sizeGrid": "0,0,0,98", "height": 204 } }, { "type": "Image", "props": { "y": 96, "x": 244, "skin": "game/p.png" } }, { "type": "Image", "props": { "y": 102, "x": 358, "skin": "game/k.png" } }, { "type": "user", "props": { "y": 46, "x": 72, "var": "user0", "runtime": "ui.userUI" } }, { "type": "user", "props": { "y": 102, "x": 564, "var": "user1", "runtime": "ui.userUI" } }] };
+    ui.pkUI = pkUI;
+})(ui || (ui = {}));
+(function (ui) {
+    var selectlUI = (function (_super) {
+        __extends(selectlUI, _super);
+        function selectlUI() {
+            return _super.call(this) || this;
+        }
+        selectlUI.prototype.createChildren = function () {
+            _super.prototype.createChildren.call(this);
+            this.createView(ui.selectlUI.uiView);
+        };
+        return selectlUI;
+    }(View));
+    selectlUI.uiView = { "type": "View", "props": { "width": 260, "height": 144 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 0, "width": 200, "skin": "game/select.png", "sizeGrid": "10,10,10,10", "height": 144 } }, { "type": "Image", "props": { "y": 53, "x": 206, "skin": "game/pkarrowl.png" } }] };
+    ui.selectlUI = selectlUI;
+})(ui || (ui = {}));
+(function (ui) {
+    var selectrUI = (function (_super) {
+        __extends(selectrUI, _super);
+        function selectrUI() {
+            return _super.call(this) || this;
+        }
+        selectrUI.prototype.createChildren = function () {
+            _super.prototype.createChildren.call(this);
+            this.createView(ui.selectrUI.uiView);
+        };
+        return selectrUI;
+    }(View));
+    selectrUI.uiView = { "type": "View", "props": { "width": 260, "height": 144 }, "child": [{ "type": "Image", "props": { "y": 0, "x": 60, "width": 200, "skin": "game/select.png", "sizeGrid": "10,10,10,10", "height": 144 } }, { "type": "Image", "props": { "y": 53, "x": 0, "skin": "game/pkarrowr.png" } }] };
+    ui.selectrUI = selectrUI;
 })(ui || (ui = {}));
 (function (ui) {
     var ubutUI = (function (_super) {
