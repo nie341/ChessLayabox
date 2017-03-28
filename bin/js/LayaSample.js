@@ -14,7 +14,7 @@ var GameMain = (function () {
         Laya.loader.load(loadingResArray, Laya.Handler.create(this, this.onAssetsLoaded));
     }
     GameMain.prototype.onAssetsLoaded = function () {
-        UIManager.toUI("gameloading");
+        UIManager.toUI(3 /* GameLoding */);
     };
     return GameMain;
 }());

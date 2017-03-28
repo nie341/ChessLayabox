@@ -7,6 +7,7 @@ class GameLoading extends ui.gamoloadingUI{
     init():void{
         this.pb.changeHandler = new Laya.Handler(this,this.onChange);
         var res:Array<any> = [ 
+            {url:"res/protobuf/msgpb.proto"},//消息文件
             {url:"room_bg.png",type:Laya.Loader.IMAGE},
             {url:"res/atlas/game.json",type:Laya.Loader.ATLAS},
             {url:"res/atlas/head.json",type:Laya.Loader.ATLAS},
@@ -47,6 +48,7 @@ class GameLoading extends ui.gamoloadingUI{
     //加载完成后的回调函数
     onLoad():void{
         // console.log("加载完成");
-        UIManager.toUI("gameroom");
+        SocketManager.getInstance();
+        UIManager.toUI(UIName.Login);
     }
 }

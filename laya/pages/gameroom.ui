@@ -2,7 +2,7 @@
     "x":0,
     "type":"View",
     "selectedBox":1,
-    "selecteID":2,
+    "selecteID":47,
     "props":{"width":768,"sceneColor":"#000000","height":1024},
     "nodeParent":-1,
     "label":"View",
@@ -514,6 +514,19 @@
             "isAniNode":true,
             "hasChild":false,
             "compId":46,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Label",
+            "props":{"y":28,"x":32,"width":141,"var":"roomid","text":"roomid","styleSkin":"game/label.png","height":26,"fontSize":24,"color":"#116941"},
+            "nodeParent":1,
+            "label":"Label(roomid)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":47,
             "child":[
                 ]
         }],

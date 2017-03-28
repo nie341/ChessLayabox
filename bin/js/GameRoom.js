@@ -13,6 +13,7 @@ var GameRoom = (function (_super) {
         _this.cardsall = 0;
         _this.countdownindex = 0;
         _this.init();
+        _this.initRoomData();
         _this.initNpc();
         _this.initUser();
         _this.initUserBut();
@@ -146,6 +147,13 @@ var GameRoom = (function (_super) {
             this.frames[i].visible = false;
         }
         this.showAddChip = false;
+    };
+    /**
+     * 初始化房间数据
+     */
+    GameRoom.prototype.initRoomData = function () {
+        var gamedata = GameData.getInstance();
+        this.roomid.text = "房间:" + gamedata.roomid;
     };
     GameRoom.prototype.initNpc = function () {
         this.gnpc.tips01 = this.tips01;

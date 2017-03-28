@@ -11,12 +11,20 @@ var UIManager = (function () {
             UIManager.uiArray[i].destroy();
         }
         var ui;
-        if (uiname == "gameloading") {
+        if (uiname == 3 /* GameLoding */) {
             ui = new GameLoading();
             Laya.stage.addChild(ui);
         }
-        else if (uiname == "gameroom") {
+        else if (uiname == 2 /* CreateRoom */) {
+            ui = new CreateRoom();
+            Laya.stage.addChild(ui);
+        }
+        else if (uiname == 1 /* GameRoom */) {
             ui = new GameRoom();
+            Laya.stage.addChild(ui);
+        }
+        else if (uiname == 0 /* Login */) {
+            ui = new Login();
             Laya.stage.addChild(ui);
         }
         if (ui != undefined) {

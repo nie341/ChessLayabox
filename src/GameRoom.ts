@@ -5,6 +5,7 @@ class GameRoom extends ui.gameroomUI{
     constructor(){
         super();
         this.init();
+        this.initRoomData();
         this.initNpc();
         this.initUser();
         this.initUserBut();
@@ -190,6 +191,13 @@ class GameRoom extends ui.gameroomUI{
 
         this.showAddChip = false;
         
+    }
+    /**
+     * 初始化房间数据
+     */
+    initRoomData():void{
+        var gamedata = GameData.getInstance();
+        this.roomid.text = "房间:"+gamedata.roomid;
     }
     initNpc():void{
         this.gnpc.tips01 = this.tips01;

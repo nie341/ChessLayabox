@@ -13,6 +13,7 @@ var GameLoading = (function (_super) {
     GameLoading.prototype.init = function () {
         this.pb.changeHandler = new Laya.Handler(this, this.onChange);
         var res = [
+            { url: "res/protobuf/msgpb.proto" },
             { url: "room_bg.png", type: Laya.Loader.IMAGE },
             { url: "res/atlas/game.json", type: Laya.Loader.ATLAS },
             { url: "res/atlas/head.json", type: Laya.Loader.ATLAS },
@@ -51,7 +52,8 @@ var GameLoading = (function (_super) {
     //加载完成后的回调函数
     GameLoading.prototype.onLoad = function () {
         // console.log("加载完成");
-        UIManager.toUI("gameroom");
+        SocketManager.getInstance();
+        UIManager.toUI(0 /* Login */);
     };
     return GameLoading;
 }(ui.gamoloadingUI));

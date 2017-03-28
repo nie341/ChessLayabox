@@ -1,0 +1,45 @@
+package sbb;
+syntax = "proto3"; 
+
+enum MSG 
+{
+	Login_Request = 1001;//登录
+	Login_Response = 1002;//登录返回
+
+	Create_Room_Request = 1003;//创建房间
+	Create_Room_Response = 1004;//创建房间返回
+
+	Add_Room_Request = 1005;//加入房间
+	Add_Room_Response = 1006;//加入房间返回
+}
+//用户登录请求
+message LoginRequest
+{    
+    required string username = 1;    
+    required string password = 2;
+}
+//用户登录返回
+message LoginResponse
+{
+	required string userid = 1;
+}
+
+message Request
+{// 包含所有的 XXXRequest消息
+	optional LoginRequest login = 1;
+}
+message Response
+{// 包含所有的Response消息
+	optional LoginResponse login = 1;
+}
+
+
+message Message
+{
+   required MSG type = 1;
+
+   optional Request request = 2;
+   optional Response response = 3;
+}
+
+

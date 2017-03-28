@@ -14,10 +14,10 @@ class GameMain{
             {url:"res/atlas/comp.json",type:Laya.Loader.ATLAS}
         ]
         Laya.loader.load(loadingResArray, Laya.Handler.create(this, this.onAssetsLoaded));
-
     }
+    
     onAssetsLoaded():void{
-        UIManager.toUI("gameloading");
+        UIManager.toUI(UIName.GameLoding);
     }
 }
 new GameMain();
