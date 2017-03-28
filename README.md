@@ -1,2 +1,2 @@
 # FriedGoldenFlower
-炸金花 layabox
+炸金花 H5Game
