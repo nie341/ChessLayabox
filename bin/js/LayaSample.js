@@ -7,7 +7,9 @@ var GameMain = (function () {
         Laya.stage.alignH = Laya.Stage.ALIGN_CENTER;
         Laya.stage.alignV = Laya.Stage.ALIGN_MIDDLE;
         Laya.stage.screenMode = Laya.Stage.SCREEN_VERTICAL;
-        Laya.Stat.show(0, 0);
+        //调试面板
+        // Laya.Stat.show(0,0);
+        // Laya.Stat.hide();
         var loadingResArray = [
             { url: "res/atlas/comp.json", type: Laya.Loader.ATLAS }
         ];

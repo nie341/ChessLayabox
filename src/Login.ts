@@ -2,20 +2,27 @@
 * name;
 */
 class Login extends ui.loginUI{
+    private username:string;
     constructor(){
         super();
+        NetworkManager.getInstance().connectPomelo();
         this.login.on(Laya.Event.CLICK,this,this.onLogin)
-        SocketEmitter.register("socket", this.onResponse, this); 
     }
     onLogin(e:Laya.Event):void{
         var user = this.user.text;
-        var pwd = this.pwd.text;
-        console.log("user",user,"pwd",pwd);
-        var socket = SocketManager.getInstance();
-        socket.sendLogin(user,pwd);
+        var room = this.room.text;
+        this.username = user;
+        GameData.getInstance().myuser = user;
+        // var socket = SocketManager.getInstance();
+        // socket.sendLogin(user,pwd);
+        NetworkManager.getInstance().onJoin(room,user,this.onJoinCallback);
     }
-    onResponse(eventName:string,userid:number):void{  
-        console.log(eventName, userid);  
-        UIManager.toUI(UIName.CreateRoom);
+
+    onJoinCallback(data:any):void{
+         console.log(data.room);
+         console.log(data.users)
+         GameData.getInstance().room = data.room;
+         GameData.getInstance().users = data.users;
+         UIManager.toUI(UIName.GameRoom);
     }
 }

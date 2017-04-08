@@ -10,20 +10,25 @@ var Login = (function (_super) {
     __extends(Login, _super);
     function Login() {
         var _this = _super.call(this) || this;
+        NetworkManager.getInstance().connectPomelo();
         _this.login.on(Laya.Event.CLICK, _this, _this.onLogin);
-        SocketEmitter.register("socket", _this.onResponse, _this);
         return _this;
     }
     Login.prototype.onLogin = function (e) {
         var user = this.user.text;
-        var pwd = this.pwd.text;
-        console.log("user", user, "pwd", pwd);
-        var socket = SocketManager.getInstance();
-        socket.sendLogin(user, pwd);
+        var room = this.room.text;
+        this.username = user;
+        GameData.getInstance().myuser = user;
+        // var socket = SocketManager.getInstance();
+        // socket.sendLogin(user,pwd);
+        NetworkManager.getInstance().onJoin(room, user, this.onJoinCallback);
     };
-    Login.prototype.onResponse = function (eventName, userid) {
-        console.log(eventName, userid);
-        UIManager.toUI(2 /* CreateRoom */);
+    Login.prototype.onJoinCallback = function (data) {
+        console.log(data.room);
+        console.log(data.users);
+        GameData.getInstance().room = data.room;
+        GameData.getInstance().users = data.users;
+        UIManager.toUI(1 /* GameRoom */);
     };
     return Login;
 }(ui.loginUI));

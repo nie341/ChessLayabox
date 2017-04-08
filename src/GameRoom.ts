@@ -10,12 +10,14 @@ class GameRoom extends ui.gameroomUI{
         this.initUser();
         this.initUserBut();
         this.initState();
-
-        this.gnpc.shuffleCards(this.cardsall);
-        this.gnpc.distributeCards(this.users);
+        this.initUI();
+        // this.gnpc.shuffleCards(this.cardsall);
+        // this.gnpc.distributeCards(this.users);
         this.gnpc.addRound();
         // this.gusermy.startCountDown();
-        this.initCountDownIndex();
+        // this.initCountDownIndex();
+        //注册推送
+        this.registerPushs();
     }
 
     public gnpc:GameNpc;
@@ -110,6 +112,7 @@ class GameRoom extends ui.gameroomUI{
             this.users[i].xian.visible = false;
             this.users[i].qi.visible = false;
             this.users[i].countdownindex = i;
+            this.users[i].setSitdown(false);
         }
 
         this.userbut01 = this.toUserBut(this.ubut01);
@@ -193,12 +196,21 @@ class GameRoom extends ui.gameroomUI{
         
     }
     /**
+     * 初始化ui
+     */
+    initUI():void{
+        this.back.on(Laya.Event.CLICK,this,this.onBack);
+    }
+    /**
      * 初始化房间数据
      */
     initRoomData():void{
         var gamedata = GameData.getInstance();
-        this.roomid.text = "房间:"+gamedata.roomid;
+        this.roomid.text = "房间:"+gamedata.room;
     }
+    /**
+     * 初始化NPC数据
+     */
     initNpc():void{
         this.gnpc.tips01 = this.tips01;
         this.gnpc.tips02 = this.tips02;
@@ -216,7 +228,10 @@ class GameRoom extends ui.gameroomUI{
         /**自动下注*/ 
         this.isAutoBet = false;
     }
-    //转换成User对象
+  
+    /**
+     * 转换成User对象
+     */
     toUser(fromuser:ui.userUI,umask:Laya.Image,qi:Laya.Label,usertype:UserType):User{
         var touser:User = new User(this,usertype);
         touser.user = fromuser;
@@ -230,7 +245,9 @@ class GameRoom extends ui.gameroomUI{
         touser.qi = qi;
         return touser;
     }
-    //转换成UserBut对象
+    /**
+     * 转换成UserBut对象
+     */
     toUserBut(frombut:ui.ubutUI):UserBut{
         var userbut:UserBut = new UserBut();
         userbut.userbut = frombut;
@@ -240,24 +257,37 @@ class GameRoom extends ui.gameroomUI{
         userbut.butname = frombut.butname;
         return userbut;
     }
-
+    /**
+     * 房间的初始用户
+     */
     initUser():void{
-        this.guserleft01.setSitdown(false);
-        // this.guserleft01.setUserInfo("测试用户1","head/1.png",1000);
-        // this.guserleft01.setSitdown(true);
+        // this.guserleft01.setSitdown(false);
+        // // this.guserleft01.setUserInfo("测试用户1","head/1.png",1000);
+        // // this.guserleft01.setSitdown(true);
 
-        this.guserleft02.setUserInfo("测试用户2","head/2.png",100000);
-        this.guserleft02.setSitdown(true);
+        // this.guserleft02.setUserInfo("测试用户2","head/2.png",100000);
+        // this.guserleft02.setSitdown(true);
 
-        this.guserright01.setSitdown(false);
-        // this.guserright01.setUserInfo("测试用户3","head/3.png",1000);
-        // this.guserright01.setSitdown(true);
+        // this.guserright01.setSitdown(false);
+        // // this.guserright01.setUserInfo("测试用户3","head/3.png",1000);
+        // // this.guserright01.setSitdown(true);
 
-        this.guserright02.setSitdown(false);
-        // this.guserright02.setUserInfo("测试用户4","head/4.png",1000);
-        // this.guserright02.setSitdown(true);
+        // this.guserright02.setSitdown(false);
+        // // this.guserright02.setUserInfo("测试用户4","head/4.png",1000);
+        // // this.guserright02.setSitdown(true);
 
-        this.gusermy.setUserInfo("玩家1","head/2.png",500000);
+        // this.gusermy.setUserInfo("my","head/2.png",500000);
+        // this.gusermy.setSitdown(true);
+        for(var i = 0 ; i < GameData.getInstance().users.length ; i ++){
+            if(GameData.getInstance().users[i].name == GameData.getInstance().myuser){
+                continue;
+            }
+            if(this.users[i].usertype != UserType.My){
+                this.users[i].setUserInfo(GameData.getInstance().users[i].name,"head/"+(i+1)+".png",GameData.getInstance().users[i].money);
+                this.users[i].setSitdown(true);
+            }
+        }
+        this.gusermy.setUserInfo(GameData.getInstance().myuser,"head/6.png",500000);
         this.gusermy.setSitdown(true);
 
         for(var  i = 0 ; i <  this.users.length ; i ++){
@@ -269,6 +299,43 @@ class GameRoom extends ui.gameroomUI{
             }
         }
         // console.log("this.cardsall:",this.cardsall);
+    }
+    /**
+     * 用户进入房间
+     */
+    addUser():void{
+        for(var i = 0 ; i < this.users.length ; i ++){
+            if(this.users[i].usertype != UserType.My&&this.users[i].sitdown == false){
+                this.users[i].setUserInfo(GameData.getInstance().adduser.name,"head/"+(i+1)+".png",500000);
+                this.users[i].setSitdown(true);
+                break;
+            }
+        }
+    }
+    /**
+     * 开始回合
+     */
+    startRound(cardsarray:any):void{
+        // var isStart:boolean = false;
+        // var sitdownNum:number = 0;
+        // for(var i = 0 ; i < this.users.length;i++){
+        //     if(this.users[i].sitdown){
+        //         sitdownNum ++;
+        //     }
+        // }
+        // if(sitdownNum > 1){
+        //     isStart =true;
+        // }
+        // if(isStart){
+        //     this.gnpc.shuffleCards(this.cardsall);
+        //     this.gnpc.distributeCards(this.users);
+        //     this.initCountDownIndex();
+        // }
+        this.gnpc.cardsarray = cardsarray;
+        this.gnpc.chipsarray = [];
+        this.gnpc.schipsarray = [];
+        this.gnpc.distributeCards(this.users);
+        this.initCountDownIndex();
     }
     initUserBut():void{
         for(var i = 0 ; i <  this.userbuts.length ; i ++ ){
@@ -845,4 +912,39 @@ class GameRoom extends ui.gameroomUI{
             fire.destroy();
         }
     }
+    onBack(e:Laya.Event):void{
+        NetworkManager.getInstance().disconnectPomelo();
+        UIManager.toUI(UIName.Login);
+    }
+    /**
+     * 注册推送
+     */
+    registerPushs():void{
+        this.registerPush(NetworkManager.PUSH_MSG_JOIN,this.onPushMsgJoin);
+        this.registerPush(NetworkManager.PUSH_MSG_START,this.onPushMsgStart);
+    }
+    registerPush(type:string, callback: Function):void{
+        SocketEmitter.register(type,callback, this); 
+        NetworkManager.getInstance().setPushMsg(type);
+    }
+    /****** 网络 ******/
+    /****** 推送回调 ******/
+    /**
+     * 加入房间推送
+     */
+    onPushMsgJoin(eventName:string,data:any):void{  
+        // console.log("onPushMsgJoin",eventName, data.user);  
+        GameData.getInstance().adduser = data.user;
+        this.addUser();
+    }
+    /**
+     * 开始游戏
+     */
+    onPushMsgStart(eventName:string,data:any):void{
+        var cards = data.cards;
+        if(cards.length > 0 ){
+            this.startRound(cards);
+        }
+    }
+    
 }

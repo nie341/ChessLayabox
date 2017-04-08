@@ -2,7 +2,7 @@
     "x":0,
     "type":"View",
     "selectedBox":1,
-    "selecteID":47,
+    "selecteID":48,
     "props":{"width":768,"sceneColor":"#000000","height":1024},
     "nodeParent":-1,
     "label":"View",
@@ -527,6 +527,19 @@
             "isAniNode":true,
             "hasChild":false,
             "compId":47,
+            "child":[
+                ]
+        },
+        {
+            "x":15,
+            "type":"Button",
+            "props":{"y":17,"x":684,"width":62,"var":"back","skin":"comp/btn_close.png","height":44},
+            "nodeParent":1,
+            "label":"Button(back)",
+            "isDirectory":false,
+            "isAniNode":true,
+            "hasChild":false,
+            "compId":48,
             "child":[
                 ]
         }],

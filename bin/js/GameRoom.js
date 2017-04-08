@@ -18,11 +18,14 @@ var GameRoom = (function (_super) {
         _this.initUser();
         _this.initUserBut();
         _this.initState();
-        _this.gnpc.shuffleCards(_this.cardsall);
-        _this.gnpc.distributeCards(_this.users);
+        _this.initUI();
+        // this.gnpc.shuffleCards(this.cardsall);
+        // this.gnpc.distributeCards(this.users);
         _this.gnpc.addRound();
         // this.gusermy.startCountDown();
-        _this.initCountDownIndex();
+        // this.initCountDownIndex();
+        //注册推送
+        _this.registerPushs();
         return _this;
     }
     GameRoom.prototype.init = function () {
@@ -73,6 +76,7 @@ var GameRoom = (function (_super) {
             this.users[i].xian.visible = false;
             this.users[i].qi.visible = false;
             this.users[i].countdownindex = i;
+            this.users[i].setSitdown(false);
         }
         this.userbut01 = this.toUserBut(this.ubut01);
         this.userbut02 = this.toUserBut(this.ubut02);
@@ -149,12 +153,21 @@ var GameRoom = (function (_super) {
         this.showAddChip = false;
     };
     /**
+     * 初始化ui
+     */
+    GameRoom.prototype.initUI = function () {
+        this.back.on(Laya.Event.CLICK, this, this.onBack);
+    };
+    /**
      * 初始化房间数据
      */
     GameRoom.prototype.initRoomData = function () {
         var gamedata = GameData.getInstance();
-        this.roomid.text = "房间:" + gamedata.roomid;
+        this.roomid.text = "房间:" + gamedata.room;
     };
+    /**
+     * 初始化NPC数据
+     */
     GameRoom.prototype.initNpc = function () {
         this.gnpc.tips01 = this.tips01;
         this.gnpc.tips02 = this.tips02;
@@ -172,7 +185,9 @@ var GameRoom = (function (_super) {
         /**自动下注*/
         this.isAutoBet = false;
     };
-    //转换成User对象
+    /**
+     * 转换成User对象
+     */
     GameRoom.prototype.toUser = function (fromuser, umask, qi, usertype) {
         var touser = new User(this, usertype);
         touser.user = fromuser;
@@ -186,7 +201,9 @@ var GameRoom = (function (_super) {
         touser.qi = qi;
         return touser;
     };
-    //转换成UserBut对象
+    /**
+     * 转换成UserBut对象
+     */
     GameRoom.prototype.toUserBut = function (frombut) {
         var userbut = new UserBut();
         userbut.userbut = frombut;
@@ -196,19 +213,33 @@ var GameRoom = (function (_super) {
         userbut.butname = frombut.butname;
         return userbut;
     };
+    /**
+     * 房间的初始用户
+     */
     GameRoom.prototype.initUser = function () {
-        this.guserleft01.setSitdown(false);
-        // this.guserleft01.setUserInfo("测试用户1","head/1.png",1000);
-        // this.guserleft01.setSitdown(true);
-        this.guserleft02.setUserInfo("测试用户2", "head/2.png", 100000);
-        this.guserleft02.setSitdown(true);
-        this.guserright01.setSitdown(false);
-        // this.guserright01.setUserInfo("测试用户3","head/3.png",1000);
-        // this.guserright01.setSitdown(true);
-        this.guserright02.setSitdown(false);
-        // this.guserright02.setUserInfo("测试用户4","head/4.png",1000);
-        // this.guserright02.setSitdown(true);
-        this.gusermy.setUserInfo("玩家1", "head/2.png", 500000);
+        // this.guserleft01.setSitdown(false);
+        // // this.guserleft01.setUserInfo("测试用户1","head/1.png",1000);
+        // // this.guserleft01.setSitdown(true);
+        // this.guserleft02.setUserInfo("测试用户2","head/2.png",100000);
+        // this.guserleft02.setSitdown(true);
+        // this.guserright01.setSitdown(false);
+        // // this.guserright01.setUserInfo("测试用户3","head/3.png",1000);
+        // // this.guserright01.setSitdown(true);
+        // this.guserright02.setSitdown(false);
+        // // this.guserright02.setUserInfo("测试用户4","head/4.png",1000);
+        // // this.guserright02.setSitdown(true);
+        // this.gusermy.setUserInfo("my","head/2.png",500000);
+        // this.gusermy.setSitdown(true);
+        for (var i = 0; i < GameData.getInstance().users.length; i++) {
+            if (GameData.getInstance().users[i].name == GameData.getInstance().myuser) {
+                continue;
+            }
+            if (this.users[i].usertype != 2 /* My */) {
+                this.users[i].setUserInfo(GameData.getInstance().users[i].name, "head/" + (i + 1) + ".png", GameData.getInstance().users[i].money);
+                this.users[i].setSitdown(true);
+            }
+        }
+        this.gusermy.setUserInfo(GameData.getInstance().myuser, "head/6.png", 500000);
         this.gusermy.setSitdown(true);
         for (var i = 0; i < this.users.length; i++) {
             var user = this.users[i];
@@ -219,6 +250,43 @@ var GameRoom = (function (_super) {
             }
         }
         // console.log("this.cardsall:",this.cardsall);
+    };
+    /**
+     * 用户进入房间
+     */
+    GameRoom.prototype.addUser = function () {
+        for (var i = 0; i < this.users.length; i++) {
+            if (this.users[i].usertype != 2 /* My */ && this.users[i].sitdown == false) {
+                this.users[i].setUserInfo(GameData.getInstance().adduser.name, "head/" + (i + 1) + ".png", 500000);
+                this.users[i].setSitdown(true);
+                break;
+            }
+        }
+    };
+    /**
+     * 开始回合
+     */
+    GameRoom.prototype.startRound = function (cardsarray) {
+        // var isStart:boolean = false;
+        // var sitdownNum:number = 0;
+        // for(var i = 0 ; i < this.users.length;i++){
+        //     if(this.users[i].sitdown){
+        //         sitdownNum ++;
+        //     }
+        // }
+        // if(sitdownNum > 1){
+        //     isStart =true;
+        // }
+        // if(isStart){
+        //     this.gnpc.shuffleCards(this.cardsall);
+        //     this.gnpc.distributeCards(this.users);
+        //     this.initCountDownIndex();
+        // }
+        this.gnpc.cardsarray = cardsarray;
+        this.gnpc.chipsarray = [];
+        this.gnpc.schipsarray = [];
+        this.gnpc.distributeCards(this.users);
+        this.initCountDownIndex();
     };
     GameRoom.prototype.initUserBut = function () {
         for (var i = 0; i < this.userbuts.length; i++) {
@@ -808,6 +876,40 @@ var GameRoom = (function (_super) {
             var fire = this.fires[i];
             fire.removeSelf();
             fire.destroy();
+        }
+    };
+    GameRoom.prototype.onBack = function (e) {
+        NetworkManager.getInstance().disconnectPomelo();
+        UIManager.toUI(0 /* Login */);
+    };
+    /**
+     * 注册推送
+     */
+    GameRoom.prototype.registerPushs = function () {
+        this.registerPush(NetworkManager.PUSH_MSG_JOIN, this.onPushMsgJoin);
+        this.registerPush(NetworkManager.PUSH_MSG_START, this.onPushMsgStart);
+    };
+    GameRoom.prototype.registerPush = function (type, callback) {
+        SocketEmitter.register(type, callback, this);
+        NetworkManager.getInstance().setPushMsg(type);
+    };
+    /****** 网络 ******/
+    /****** 推送回调 ******/
+    /**
+     * 加入房间推送
+     */
+    GameRoom.prototype.onPushMsgJoin = function (eventName, data) {
+        // console.log("onPushMsgJoin",eventName, data.user);  
+        GameData.getInstance().adduser = data.user;
+        this.addUser();
+    };
+    /**
+     * 开始游戏
+     */
+    GameRoom.prototype.onPushMsgStart = function (eventName, data) {
+        var cards = data.cards;
+        if (cards.length > 0) {
+            this.startRound(cards);
         }
     };
     return GameRoom;

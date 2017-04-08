@@ -6,7 +6,11 @@ class GameData{
 
     }
     static _instance = null;
-    public roomid:number;
+    // public roomid:number;
+    public users:Array<any>;
+    public myuser:string;
+    public adduser:any;
+    public room:string;
     /**
 	 * 单例模式
 	 */

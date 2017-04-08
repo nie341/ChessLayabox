@@ -1,8 +1,8 @@
 {
     "x":0,
     "type":"View",
-    "selectedBox":1,
-    "selecteID":5,
+    "selectedBox":7,
+    "selecteID":3,
     "props":{"width":768,"sceneColor":"#000000","height":1024},
     "nodeParent":-1,
     "label":"View",
@@ -92,9 +92,9 @@
                 {
                     "x":30,
                     "type":"TextInput",
-                    "props":{"y":0,"x":116,"width":489,"var":"pwd","skin":"comp/textinput.png","height":102,"fontSize":30},
+                    "props":{"y":0,"x":116,"width":489,"var":"room","skin":"comp/textinput.png","height":102,"fontSize":30},
                     "nodeParent":8,
-                    "label":"TextInput(pwd)",
+                    "label":"TextInput(room)",
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
@@ -105,7 +105,7 @@
                 {
                     "x":30,
                     "type":"Label",
-                    "props":{"y":21,"x":0,"width":116,"text":"密码","styleSkin":"comp/label.png","overflow":"hidden","height":61,"fontSize":30,"align":"center"},
+                    "props":{"y":21,"x":0,"width":116,"text":"房间号","styleSkin":"comp/label.png","overflow":"hidden","height":61,"fontSize":30,"align":"center"},
                     "nodeParent":8,
                     "label":"Label",
                     "isDirectory":false,
