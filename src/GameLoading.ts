@@ -48,7 +48,7 @@ class GameLoading extends ui.gamoloadingUI{
     //加载完成后的回调函数
     onLoad():void{
         // console.log("加载完成");
-        SocketManager.getInstance();
+        // SocketManager.getInstance();
         UIManager.toUI(UIName.Login);
     }
 }

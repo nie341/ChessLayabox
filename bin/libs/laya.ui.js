@@ -6,8 +6,8 @@
 	var Ease=laya.utils.Ease,Event=laya.events.Event,Font=laya.display.css.Font,FrameAnimation=laya.display.FrameAnimation;
 	var Graphics=laya.display.Graphics,Handler=laya.utils.Handler,Input=laya.display.Input,Loader=laya.net.Loader;
 	var Node=laya.display.Node,Point=laya.maths.Point,Rectangle=laya.maths.Rectangle,Render=laya.renders.Render;
-	var Sprite=laya.display.Sprite,Stage=laya.display.Stage,Text=laya.display.Text,Texture=laya.resource.Texture;
-	var Tween=laya.utils.Tween,Utils=laya.utils.Utils;
+	var Sprite=laya.display.Sprite,Text=laya.display.Text,Texture=laya.resource.Texture,Tween=laya.utils.Tween;
+	var Utils=laya.utils.Utils;
 	Laya.interface('laya.ui.IItem');
 	Laya.interface('laya.ui.IRender');
 	Laya.interface('laya.ui.ISelect');
@@ -123,6 +123,7 @@
 		UIConfig.showButtons=true;
 		UIConfig.popupBgColor="#000000";
 		UIConfig.popupBgAlpha=0.5;
+		UIConfig.closeDialogOnSide=true;
 		return UIConfig;
 	})()
 
@@ -211,6 +212,7 @@
 		__proto.drawBitmap=function(repeat,tex,x,y,width,height){
 			(width===void 0)&& (width=0);
 			(height===void 0)&& (height=0);
+			if (width < 0.1 || height < 0.1)return;
 			if (repeat && (tex.width!=width || tex.height !=height))this.fillTexture(tex,x,y,width,height);
 			else this.drawTexture(tex,x,y,width,height);
 		}
@@ -468,14 +470,14 @@
 			var parent=this.parent;
 			if (parent){
 				if (!isNaN(layout.centerX)){
-					this.x=(parent.width-this.displayWidth)*0.5+layout.centerX+this.pivotX *this.scaleX;
+					this.x=Math.round((parent.width-this.displayWidth)*0.5+layout.centerX+this.pivotX *this.scaleX);
 					}else if (!isNaN(layout.left)){
-					this.x=layout.left+this.pivotX *this.scaleX;
+					this.x=Math.round(layout.left+this.pivotX *this.scaleX);
 					if (!isNaN(layout.right)){
-						this.width=(parent._width-layout.left-layout.right)/ this.scaleX;
+						this.width=(parent._width-layout.left-layout.right)/ (this.scaleX || 0.01);
 					}
 					}else if (!isNaN(layout.right)){
-					this.x=parent.width-this.displayWidth-layout.right+this.pivotX *this.scaleX;
+					this.x=Math.round(parent.width-this.displayWidth-layout.right+this.pivotX *this.scaleX);
 				}
 			}
 		}
@@ -489,14 +491,14 @@
 			var parent=this.parent;
 			if (parent){
 				if (!isNaN(layout.centerY)){
-					this.y=(parent.height-this.displayHeight)*0.5+layout.centerY+this.pivotY *this.scaleY;
+					this.y=Math.round((parent.height-this.displayHeight)*0.5+layout.centerY+this.pivotY *this.scaleY);
 					}else if (!isNaN(layout.top)){
-					this.y=layout.top+this.pivotY *this.scaleY;
+					this.y=Math.round(layout.top+this.pivotY *this.scaleY);
 					if (!isNaN(layout.bottom)){
-						this.height=(parent._height-layout.top-layout.bottom)/ this.scaleY;
+						this.height=(parent._height-layout.top-layout.bottom)/ (this.scaleY || 0.01);
 					}
 					}else if (!isNaN(layout.bottom)){
-					this.y=parent.height-this.displayHeight-layout.bottom+this.pivotY *this.scaleY;
+					this.y=Math.round(parent.height-this.displayHeight-layout.bottom+this.pivotY *this.scaleY);
 				}
 			}
 		}
@@ -821,6 +823,175 @@
 
 
 	/**
+	*<code>DialogManager</code> 对话框管理容器，所有的对话框都在该容器内，并且受管理器管理。
+	*任意对话框打开和关闭，都会出发管理类的open和close事件
+	*可以通过UIConfig设置弹出框背景透明度，模式窗口点击边缘是否关闭，点击窗口是否切换层次等
+	*通过设置对话框的zOrder属性，可以更改弹出的层次
+	*/
+	//class laya.ui.DialogManager extends laya.display.Sprite
+	var DialogManager=(function(_super){
+		function DialogManager(){
+			this.lockLayer=null;
+			this.popupEffect=function(dialog){
+				dialog.scale(1,1);
+				Tween.from(dialog,{x:Laya.stage.width / 2,y:Laya.stage.height / 2,scaleX:0,scaleY:0},300,Ease.backOut);
+			}
+			this.closeEffect=function(dialog,type){
+				Tween.to(dialog,{x:Laya.stage.width / 2,y:Laya.stage.height / 2,scaleX:0,scaleY:0},300,Ease.strongOut,Handler.create(this,this.doClose,[dialog,type]));
+			}
+			DialogManager.__super.call(this);
+			this.maskLayer=new Sprite();
+			this.mouseEnabled=this.maskLayer.mouseEnabled=true;
+			this.zOrder=1000;
+			Laya.stage.addChild(this);
+			Laya.stage.on(/*laya.events.Event.RESIZE*/"resize",this,this._onResize);
+			if (UIConfig.closeDialogOnSide)this.maskLayer.on("click",this,this._closeOnSide);
+			this._onResize(null);
+		}
+
+		__class(DialogManager,'laya.ui.DialogManager',_super);
+		var __proto=DialogManager.prototype;
+		__proto._closeOnSide=function(){
+			var dialog=this.getChildAt(this.numChildren-1);
+			if ((dialog instanceof laya.ui.Dialog ))dialog.close("side");
+		}
+
+		/**设置锁定界面，如果为空则什么都不显示*/
+		__proto.setLockView=function(value){
+			if (!this.lockLayer){
+				this.lockLayer=new Box();
+				this.lockLayer.mouseEnabled=true;
+				this.lockLayer.size(Laya.stage.width,Laya.stage.height);
+			}
+			this.lockLayer.removeChildren();
+			if (value){
+				value.centerX=value.centerY=0;
+				this.lockLayer.addChild(value);
+			}
+		}
+
+		/**@private */
+		__proto._onResize=function(e){
+			var width=this.maskLayer.width=Laya.stage.width;
+			var height=this.maskLayer.height=Laya.stage.height;
+			if (this.lockLayer)this.lockLayer.size(width,height);
+			this.maskLayer.graphics.clear();
+			this.maskLayer.graphics.drawRect(0,0,width,height,UIConfig.popupBgColor);
+			this.maskLayer.alpha=UIConfig.popupBgAlpha;
+			for (var i=this.numChildren-1;i >-1;i--){
+				var item=this.getChildAt(i);
+				if (item.popupCenter)this._centerDialog(item);
+			}
+		}
+
+		__proto._centerDialog=function(dialog){
+			dialog.x=Math.round(((Laya.stage.width-dialog.width)>> 1)+dialog.pivotX);
+			dialog.y=Math.round(((Laya.stage.height-dialog.height)>> 1)+dialog.pivotY);
+		}
+
+		/**
+		*显示对话框(非模式窗口类型)。
+		*@param dialog 需要显示的对象框 <code>Dialog</code> 实例。
+		*@param closeOther 是否关闭其它对话框，若值为ture，则关闭其它的对话框。
+		*/
+		__proto.open=function(dialog,closeOther){
+			(closeOther===void 0)&& (closeOther=false);
+			if (closeOther)this.removeChildren();
+			if (dialog.popupCenter)this._centerDialog(dialog);
+			this.addChild(dialog);
+			if (dialog.isModal || this._$P["hasZorder"])this.timer.callLater(this,this._checkMask);
+			this.popupEffect && this.popupEffect(dialog);
+			this.event(/*laya.events.Event.OPEN*/"open");
+		}
+
+		/**
+		*锁定所有层，显示加载条信息，防止双击
+		*/
+		__proto.lock=function(value){
+			if (this.lockLayer){
+				if (value)this.addChild(this.lockLayer);
+				else this.lockLayer.removeSelf();
+			}
+		}
+
+		/**
+		*关闭对话框。
+		*@param dialog 需要关闭的对象框 <code>Dialog</code> 实例。
+		*@param type 关闭的类型，默认为空
+		*/
+		__proto.close=function(dialog,type){
+			if (this.closeEffect !=null)this.closeEffect(dialog,type);
+			else this.doClose(dialog);
+		}
+
+		/**
+		*真正关闭对话框。
+		*@param dialog 需要关闭的对象框 <code>Dialog</code> 实例。
+		*@param type 关闭的类型，默认为空
+		*/
+		__proto.doClose=function(dialog,type){
+			dialog.removeSelf();
+			dialog.isModal && this._checkMask();
+			dialog.closeHandler && dialog.closeHandler.runWith(type);
+			this.event(/*laya.events.Event.CLOSE*/"close");
+		}
+
+		/**
+		*关闭所有的对话框。
+		*/
+		__proto.closeAll=function(){
+			this.removeChildren();
+			this.event(/*laya.events.Event.CLOSE*/"close");
+		}
+
+		/**
+		*根据组获取所有对话框
+		*@param group 组名称
+		*@return 对话框数组
+		*/
+		__proto.getDialogsByGroup=function(group){
+			var arr=[];
+			for (var i=this.numChildren-1;i >-1;i--){
+				var item=this.getChildAt(i);
+				if (item.group===group){
+					arr.push(item);
+				}
+			}
+			return arr;
+		}
+
+		/**
+		*根据组关闭所有弹出框
+		*@param group 需要关闭的组名称
+		*/
+		__proto.closeByGround=function(group){
+			var arr=[];
+			for (var i=this.numChildren-1;i >-1;i--){
+				var item=this.getChildAt(i);
+				if (item.group===group){
+					item.close();
+				}
+			}
+			return arr;
+		}
+
+		/**@private 发生层次改变后，重新检查遮罩层是否正确*/
+		__proto._checkMask=function(){
+			this.maskLayer.removeSelf();
+			for (var i=this.numChildren-1;i >-1;i--){
+				var dialog=this.getChildAt(i);
+				if (dialog && dialog.isModal){
+					this.addChildAt(this.maskLayer,i);
+					return;
+				}
+			}
+		}
+
+		return DialogManager;
+	})(Sprite)
+
+
+	/**
 	*<code>Box</code> 类是一个控件容器类。
 	*/
 	//class laya.ui.Box extends laya.ui.Component
@@ -976,11 +1147,15 @@
 
 		/**@inheritDoc */
 		__proto.initialize=function(){
-			this.on(/*laya.events.Event.MOUSE_OVER*/"mouseover",this,this.onMouse);
-			this.on(/*laya.events.Event.MOUSE_OUT*/"mouseout",this,this.onMouse);
-			this.on(/*laya.events.Event.MOUSE_DOWN*/"mousedown",this,this.onMouse);
-			this.on(/*laya.events.Event.MOUSE_UP*/"mouseup",this,this.onMouse);
-			this.on(/*laya.events.Event.CLICK*/"click",this,this.onMouse);
+			if (this._mouseEnableState!==1){
+				this.mouseEnabled=true;
+				this._setBit(/*laya.display.Node.MOUSEENABLE*/0x2,true);
+			}
+			this._createListener(/*laya.events.Event.MOUSE_OVER*/"mouseover",this,this.onMouse,null,false,false);
+			this._createListener(/*laya.events.Event.MOUSE_OUT*/"mouseout",this,this.onMouse,null,false,false);
+			this._createListener(/*laya.events.Event.MOUSE_DOWN*/"mousedown",this,this.onMouse,null,false,false);
+			this._createListener(/*laya.events.Event.MOUSE_UP*/"mouseup",this,this.onMouse,null,false,false);
+			this._createListener(/*laya.events.Event.CLICK*/"click",this,this.onMouse,null,false,false);
 		}
 
 		/**
@@ -1009,7 +1184,8 @@
 			};
 			var width=img.sourceWidth;
 			var height=img.sourceHeight / this._stateNum;
-			var key=this._skin+this._stateNum;
+			img.$_GID || (img.$_GID=Utils.getGID());
+			var key=img.$_GID+"-"+this._stateNum;
 			var clips=AutoBitmap.getCache(key);
 			if (clips)this._sources=clips;
 			else {
@@ -1180,7 +1356,7 @@
 			if (!this._text && !value)return;
 			this.createText();
 			if (this._text.text !=value){
-				value && !this._text.displayedInStage && this.addChild(this._text);
+				value && !this._text.parent && this.addChild(this._text);
 				this._text.text=(value+"").replace(/\\n/g,"\n");
 				this._setStateChanged();
 			}
@@ -1319,7 +1495,7 @@
 
 		/**图标x,y偏移，格式：100,100*/
 		__getset(0,__proto,'iconOffset',function(){
-			return this._bitmap._offset ? null :this._bitmap._offset.join(",");
+			return this._bitmap._offset ? this._bitmap._offset.join(","):null;
 			},function(value){
 			if (value)this._bitmap._offset=UIUtils.fillArray([1,1],value,Number);
 			else this._bitmap._offset=[];
@@ -1482,18 +1658,12 @@
 			this.graphics=this._bitmap=new AutoBitmap();
 		}
 
-		/**@inheritDoc */
-		__proto.initialize=function(){
-			this.on(/*laya.events.Event.DISPLAY*/"display",this,this._onDisplay);
-			this.on(/*laya.events.Event.UNDISPLAY*/"undisplay",this,this._onDisplay);
-		}
-
 		/**@private */
 		__proto._onDisplay=function(e){
 			if (this._isPlaying){
 				if (this._displayedInStage)this.play();
 				else this.stop();
-				}else if (this._autoPlay && this._displayedInStage){
+				}else if (this._autoPlay){
 				this.play();
 			}
 		}
@@ -1521,16 +1691,16 @@
 		*/
 		__proto.loadComplete=function(url,img){
 			if (url===this._skin && img){
-				this._clipWidth || (this._clipWidth=Math.ceil(img.sourceWidth / this._clipX));
-				this._clipHeight || (this._clipHeight=Math.ceil(img.sourceHeight / this._clipY));
-				var key=this._skin+this._clipWidth+this._clipHeight;
+				var w=this._clipWidth || Math.ceil(img.sourceWidth / this._clipX);
+				var h=this._clipHeight || Math.ceil(img.sourceHeight / this._clipY);
+				var key=this._skin+w+h;
 				var clips=AutoBitmap.getCache(key);
 				if (clips)this._sources=clips;
 				else {
 					this._sources=[];
 					for (var i=0;i < this._clipY;i++){
 						for (var j=0;j < this._clipX;j++){
-							this._sources.push(Texture.createFromTexture(img,this._clipWidth *j,this._clipHeight *i,this._clipWidth,this._clipHeight));
+							this._sources.push(Texture.createFromTexture(img,w *j,h *i,w,h));
 						}
 					}
 					AutoBitmap.setCache(key,this._sources);
@@ -1549,6 +1719,8 @@
 			this.index=0;
 			this._index++;
 			Laya.timer.loop(this.interval,this,this._loop);
+			this.on(/*laya.events.Event.DISPLAY*/"display",this,this._onDisplay);
+			this.on(/*laya.events.Event.UNDISPLAY*/"undisplay",this,this._onDisplay);
 		}
 
 		/**
@@ -1950,7 +2122,7 @@
 			var py=p.y+this._colorButton.height;
 			py=py+this._colorPanel.height <=Laya.stage.height ? py :p.y-this._colorPanel.height;
 			this._colorPanel.pos(px,py);
-			Laya.stageBox.addChild(this._colorPanel);
+			Laya._currentStage.addChild(this._colorPanel);
 			Laya.stage.on(/*laya.events.Event.MOUSE_DOWN*/"mousedown",this,this.removeColorBox);
 		}
 
@@ -2503,7 +2675,7 @@
 					var py=p.y+this._button.height;
 					py=py+this._listHeight <=Laya.stage.height ? py :p.y-this._listHeight;
 					this._list.pos(p.x,py);
-					Laya.stageBox.addChild(this._list);
+					Laya._currentStage.addChild(this._list);
 					Laya.stage.once(/*laya.events.Event.MOUSE_DOWN*/"mousedown",this,this.removeList);
 					this._list.selectedIndex=this._selectedIndex;
 					}else {
@@ -2656,6 +2828,7 @@
 		/**@inheritDoc */
 		__proto.destroy=function(destroyChild){
 			(destroyChild===void 0)&& (destroyChild=true);
+			this.stopScroll();
 			_super.prototype.destroy.call(this,destroyChild);
 			this.upButton && this.upButton.destroy(destroyChild);
 			this.downButton && this.downButton.destroy(destroyChild);
@@ -2816,9 +2989,9 @@
 			if (!this._checkElastic){
 				if (this.elasticDistance > 0){
 					if (!this._checkElastic && this._lastOffset !=0){
-						this._checkElastic=true;
 						if ((this._lastOffset > 0 && this._value <=this.min)|| (this._lastOffset < 0 && this._value >=this.max)){
 							this._isElastic=true;
+							this._checkElastic=true;
 							}else {
 							this._isElastic=false;
 						}
@@ -2827,16 +3000,14 @@
 					this._checkElastic=true;
 				}
 			}
-			if (this._checkElastic){
-				if (this._isElastic){
-					if (this._value <=this.min){
-						this.value-=this._lastOffset *Math.max(0,(1-((this.min-this._value)/ this.elasticDistance)));
-						}else if (this._value >=this.max){
-						this.value-=this._lastOffset *Math.max(0,(1-((this._value-this.max)/ this.elasticDistance)));
-					}
-					}else {
-					this.value-=this._lastOffset;
+			if (this._isElastic){
+				if (this._value <=this.min){
+					this.value-=this._lastOffset *Math.max(0,(1-((this.min-this._value)/ this.elasticDistance)));
+					}else if (this._value >=this.max){
+					this.value-=this._lastOffset *Math.max(0,(1-((this._value-this.max)/ this.elasticDistance)));
 				}
+				}else {
+				this.value-=this._lastOffset;
 			}
 		}
 
@@ -2885,9 +3056,31 @@
 		/**@private */
 		__proto.tweenMove=function(){
 			this._lastOffset *=this.rollRatio;
+			var tarSpeed=NaN;
+			if (this.elasticDistance > 0){
+				if (this._lastOffset > 0 && this.value <=this.min){
+					this._isElastic=true;
+					tarSpeed=-(this.min-this.elasticDistance-this.value)*0.5;
+					if (this._lastOffset > tarSpeed)this._lastOffset=tarSpeed;
+					}else if (this._lastOffset<0&&this.value>=this.max){
+					this._isElastic=true;
+					tarSpeed=-(this.max+this.elasticDistance-this.value)*0.5;
+					if (this._lastOffset < tarSpeed)this._lastOffset=tarSpeed;
+				}
+			}
 			this.value-=this._lastOffset;
-			if (Math.abs(this._lastOffset)< 1 || this.value==this.max || this.value==this.min){
+			if (Math.abs(this._lastOffset)< 1){
 				Laya.timer.clear(this,this.tweenMove);
+				if (this._isElastic){
+					if (this._value < this.min){
+						Tween.to(this,{value:this.min},this.elasticBackTime,Ease.sineOut,Handler.create(this,this.elasticOver));
+						}else if (this._value > this.max){
+						Tween.to(this,{value:this.max},this.elasticBackTime,Ease.sineOut,Handler.create(this,this.elasticOver));
+						}else{
+						this.elasticOver();
+					}
+					return;
+				}
 				this.event(/*laya.events.Event.END*/"end");
 				if (!this.hide && this.autoHide){
 					Tween.to(this,{alpha:0},500);
@@ -4343,7 +4536,7 @@
 		__proto.showDislayTip=function(tip){
 			this.addChild(tip);
 			this._showToStage(this);
-			Laya.stageBox.addChild(this);
+			Laya._currentStage.addChild(this);
 		}
 
 		/**
@@ -4356,7 +4549,7 @@
 			g.drawRect(0,0,this._tipText.width+10,this._tipText.height+10,TipManager.tipBackColor);
 			this.addChild(this._tipBox);
 			this._showToStage(this);
-			Laya.stageBox.addChild(this);
+			Laya._currentStage.addChild(this);
 		}
 
 		/**默认鼠标提示函数*/
@@ -4376,6 +4569,207 @@
 
 
 	/**
+	*动效类
+	*@author ww
+	*/
+	//class laya.ui.EffectAnimation extends laya.display.FrameAnimation
+	var EffectAnimation=(function(_super){
+		function EffectAnimation(){
+			this._target=null;
+			this._playEvents=null;
+			this._initData={};
+			this._aniKeys=null;
+			this._effectClass=null;
+			EffectAnimation.__super.call(this);
+		}
+
+		__class(EffectAnimation,'laya.ui.EffectAnimation',_super);
+		var __proto=EffectAnimation.prototype;
+		/**@private */
+		__proto._onOtherBegin=function(effect){
+			if (effect==this)
+				return;
+			this.stop();
+		}
+
+		/**@private */
+		__proto.addEvent=function(){
+			if (!this._target || !this._playEvents)
+				return;
+			this._setControlNode(this._target);
+			this._target.on(this._playEvents,this,this._onPlayAction);
+		}
+
+		/**@private */
+		__proto._onPlayAction=function(){
+			if (!this._target)
+				return;
+			this._target.event("effectanimationbegin",[this]);
+			this._recordInitData();
+			this.play(0,false);
+		}
+
+		/**@private */
+		__proto._recordInitData=function(){
+			if (!this._aniKeys)
+				return;
+			var i=0,len=0;
+			len=this._aniKeys.length;
+			var key;
+			for (i=0;i < len;i++){
+				key=this._aniKeys[i];
+				this._initData[key]=this._target[key];
+			}
+		}
+
+		/**@private */
+		__proto._displayToIndex=function(value){
+			if (!this._animationData)
+				return;
+			if (value < 0)
+				value=0;
+			if (value > this._count)
+				value=this._count;
+			var nodes=this._animationData.nodes,i=0,len=nodes.length;
+			len=len > 1 ? 1 :len;
+			for (i=0;i < len;i++){
+				this._displayNodeToFrame(nodes[i],value);
+			}
+		}
+
+		/**@private */
+		__proto._displayNodeToFrame=function(node,frame,targetDic){
+			if (!this._target)
+				return;
+			var target;
+			target=this._target;
+			var frames=node.frames,key,propFrames,value;
+			var keys=node.keys,i=0,len=keys.length;
+			var secondFrames;
+			secondFrames=node.secondFrames;
+			var tSecondFrame=0;
+			var easeFun;
+			var tKeyFrames;
+			var startFrame;
+			var endFrame;
+			for (i=0;i < len;i++){
+				key=keys[i];
+				propFrames=frames[key];
+				tSecondFrame=secondFrames[key];
+				if (tSecondFrame==-1){
+					value=this._initData[key];
+				}
+				else {
+					if (frame < tSecondFrame){
+						tKeyFrames=node.keyframes[key];
+						startFrame=tKeyFrames[0];
+						if (startFrame.tween){
+							easeFun=Ease[startFrame.tweenMethod];
+							if (easeFun==null){
+								easeFun=Ease.linearNone;
+							}
+							endFrame=tKeyFrames[1];
+							value=easeFun(frame,this._initData[key],endFrame.value-this._initData[key],endFrame.index);
+						}
+						else {
+							value=this._initData[key];
+						}
+					}
+					else {
+						if (propFrames.length > frame){
+							value=propFrames[frame];
+						}
+						else {
+							value=propFrames[propFrames.length-1];
+						}
+					}
+				}
+				target[key]=value;
+			}
+		}
+
+		/**@private */
+		__proto._calculateNodeKeyFrames=function(node){
+			_super.prototype._calculateNodeKeyFrames.call(this,node);
+			var keyFrames=node.keyframes,key,tKeyFrames,target=node.target;
+			var secondFrames;
+			secondFrames={};
+			node.secondFrames=secondFrames;
+			for (key in keyFrames){
+				tKeyFrames=keyFrames[key];
+				if (tKeyFrames.length <=1){
+					secondFrames[key]=-1;
+				}
+				else {
+					secondFrames[key]=tKeyFrames[1].index;
+				}
+			}
+		}
+
+		/**
+		*控制对象
+		*@param v
+		*
+		*/
+		/**
+		*控制对象
+		*@return
+		*
+		*/
+		__getset(0,__proto,'target',function(){
+			return this._target;
+			},function(v){
+			if (this._target){
+				this._target.off("effectanimationbegin",this,this._onOtherBegin);
+			}
+			this._target=v;
+			if (this._target){
+				this._target.on("effectanimationbegin",this,this._onOtherBegin);
+			}
+			this.addEvent();
+		});
+
+		/**
+		*设置开始播放的事件
+		*@param event
+		*
+		*/
+		__getset(0,__proto,'playEvent',null,function(event){
+			this._playEvents=event;
+			if (!event)
+				return;
+			this.addEvent();
+		});
+
+		/**
+		*设置提供数据的类
+		*@param classStr 类路径
+		*
+		*/
+		__getset(0,__proto,'effectClass',null,function(classStr){
+			this._effectClass=ClassUtils.getClass(classStr);
+			if (this._effectClass){
+				var uiData;
+				uiData=this._effectClass["uiView"];
+				if (uiData){
+					var aniData;
+					aniData=uiData["animations"];
+					if (aniData && aniData[0]){
+						this._setUp({},aniData[0]);
+						if (aniData[0].nodes && aniData[0].nodes[0]){
+							this._aniKeys=aniData[0].nodes[0].keys;
+						}
+					}
+				}
+			}
+		});
+
+		EffectAnimation.EffectAnimationBegin="effectanimationbegin";
+		return EffectAnimation;
+	})(FrameAnimation)
+
+
+	/**
 	*关键帧动画播放类
 	*
 	*/
@@ -4391,6 +4785,166 @@
 		__class(FrameClip,'laya.ui.FrameClip',_super);
 		return FrameClip;
 	})(FrameAnimation)
+
+
+	/**
+	*<code>View</code> 是一个视图类。
+	*@internal <p><code>View</code></p>
+	*/
+	//class laya.ui.View extends laya.ui.Box
+	var View=(function(_super){
+		function View(){
+			this._idMap=null;
+			this._aniList=null;
+			View.__super.call(this);
+		}
+
+		__class(View,'laya.ui.View',_super);
+		var __proto=View.prototype;
+		/**
+		*@private
+		*通过视图数据创建视图。
+		*@param uiView 视图数据信息。
+		*/
+		__proto.createView=function(uiView){
+			if (uiView.animations && !this._idMap)this._idMap={};
+			View.createComp(uiView,this,this);
+			if (uiView.animations){
+				var anilist=[];
+				var animations=uiView.animations;
+				var i=0,len=animations.length;
+				var tAni;
+				var tAniO;
+				for (i=0;i < len;i++){
+					tAni=new FrameClip();
+					tAniO=animations[i];
+					tAni._setUp(this._idMap,tAniO);
+					this[tAniO.name]=tAni;
+					tAni._setControlNode(this);
+					switch (tAniO.action){
+						case 1:
+							tAni.play(0,false);
+							break ;
+						case 2:
+							tAni.play(0,true);
+							break ;
+						}
+					anilist.push(tAni);
+				}
+				this._aniList=anilist;
+			}
+			if (this._width > 0 && uiView.props.hitTestPrior==null && !this.mouseThrough)this.hitTestPrior=true;
+		}
+
+		/**
+		*@private
+		*装载UI视图。用于加载模式。
+		*@param path UI资源地址。
+		*/
+		__proto.loadUI=function(path){
+			var uiView=View.uiMap[path];
+			uiView && this.createView(uiView);
+		}
+
+		/**
+		*<p>销毁此对象。</p>
+		*@param destroyChild 是否同时销毁子节点，若值为true,则销毁子节点，否则不销毁子节点。
+		*/
+		__proto.destroy=function(destroyChild){
+			(destroyChild===void 0)&& (destroyChild=true);
+			if (this._aniList)this._aniList.length=0;
+			this._idMap=null;
+			this._aniList=null;
+			laya.ui.Component.prototype.destroy.call(this,destroyChild);
+		}
+
+		View._regs=function(){
+			var key;
+			for (key in View.uiClassMap){
+				ClassUtils.regClass(key,View.uiClassMap[key]);
+			}
+		}
+
+		View.createComp=function(uiView,comp,view){
+			comp=comp || View.getCompInstance(uiView);
+			if (!comp){
+				console.warn("can not create:"+uiView.type);
+				return null;
+			};
+			var child=uiView.child;
+			if (child){
+				for (var i=0,n=child.length;i < n;i++){
+					var node=child[i];
+					if (comp.hasOwnProperty("itemRender")&& (node.props.name=="render" || node.props.renderType==="render")){
+						(comp).itemRender=node;
+						}else if (node.type=="Graphic"){
+						ClassUtils.addGraphicsToSprite(node,comp);
+						}else if (ClassUtils.isDrawType(node.type)){
+						ClassUtils.addGraphicToSprite(node,comp,true);
+						}else {
+						var tChild=View.createComp(node,null,view);
+						if (node.type=="Script"){
+							if (tChild.hasOwnProperty("owner")){
+								tChild["owner"]=comp;
+								}else if (tChild.hasOwnProperty("target")){
+								tChild["target"]=comp;
+							}
+							}else if (node.props.renderType=="mask" || node.props.name=="mask"){
+							comp.mask=tChild;
+							}else {(
+							tChild instanceof laya.display.Sprite )&& comp.addChild(tChild);
+						}
+					}
+				}
+			};
+			var props=uiView.props;
+			for (var prop in props){
+				var value=props[prop];
+				View.setCompValue(comp,prop,value,view);
+			}
+			if (Laya.__typeof(comp,'laya.ui.IItem'))(comp).initItems();
+			if (uiView.compId && view && view._idMap){
+				view._idMap[uiView.compId]=comp;
+			}
+			return comp;
+		}
+
+		View.setCompValue=function(comp,prop,value,view){
+			if (prop==="var" && view){
+				view[value]=comp;
+				}else {
+				comp[prop]=(value==="true" ? true :(value==="false" ? false :value))
+			}
+		}
+
+		View.getCompInstance=function(json){
+			var runtime=json.props?json.props.runtime:null;
+			var compClass;
+			compClass=runtime ? (View.viewClassMap[runtime] || View.uiClassMap[runtime]|| Laya["__classmap"][runtime]):View.uiClassMap[json.type];
+			if (json.props && json.props.hasOwnProperty("renderType")&& json.props["renderType"]=="instance")return compClass["instance"];
+			return compClass ? new compClass():null;
+		}
+
+		View.regComponent=function(key,compClass){
+			View.uiClassMap[key]=compClass;
+			ClassUtils.regClass(key,compClass);
+		}
+
+		View.regViewRuntime=function(key,compClass){
+			View.viewClassMap[key]=compClass;
+		}
+
+		View.uiMap={};
+		View.viewClassMap={};
+		__static(View,
+		['uiClassMap',function(){return this.uiClassMap={"ViewStack":ViewStack,"LinkButton":Button,"TextArea":TextArea,"ColorPicker":ColorPicker,"Box":Box,"Button":Button,"CheckBox":CheckBox,"Clip":Clip,"ComboBox":ComboBox,"Component":Component,"HScrollBar":HScrollBar,"HSlider":HSlider,"Image":Image,"Label":Label,"List":List,"Panel":Panel,"ProgressBar":ProgressBar,"Radio":Radio,"RadioGroup":RadioGroup,"ScrollBar":ScrollBar,"Slider":Slider,"Tab":Tab,"TextInput":TextInput,"View":View,"VScrollBar":VScrollBar,"VSlider":VSlider,"Tree":Tree,"HBox":HBox,"VBox":VBox,"Sprite":Sprite,"Animation":Animation,"Text":Text};}
+		]);
+		View.__init$=function(){
+			View._regs()
+		}
+
+		return View;
+	})(Box)
 
 
 	/**
@@ -4511,165 +5065,6 @@
 
 		return CheckBox;
 	})(Button)
-
-
-	/**
-	*<code>View</code> 是一个视图类。
-	*@internal <p><code>View</code></p>
-	*/
-	//class laya.ui.View extends laya.ui.Box
-	var View=(function(_super){
-		function View(){
-			this._idMap=null;
-			this._aniList=null;
-			View.__super.call(this);
-		}
-
-		__class(View,'laya.ui.View',_super);
-		var __proto=View.prototype;
-		/**
-		*@private
-		*通过视图数据创建视图。
-		*@param uiView 视图数据信息。
-		*/
-		__proto.createView=function(uiView){
-			if (uiView.animations && !this._idMap)this._idMap={};
-			View.createComp(uiView,this,this);
-			if (uiView.animations){
-				var anilist=[];
-				var animations=uiView.animations;
-				var i=0,len=animations.length;
-				var tAni;
-				var tAniO;
-				for (i=0;i < len;i++){
-					tAni=new FrameClip();
-					tAniO=animations[i];
-					tAni._setUp(this._idMap,tAniO);
-					this[tAniO.name]=tAni;
-					tAni._setControlNode(this);
-					switch (tAniO.action){
-						case 1:
-							tAni.play(0,false);
-							break ;
-						case 2:
-							tAni.play(0,true);
-							break ;
-						}
-					anilist.push(tAni);
-				}
-				this._aniList=anilist;
-			}
-			if (this._width > 0 && uiView.props.hitTestPrior==null && !this.mouseThrough)this.hitTestPrior=true;
-		}
-
-		/**
-		*@private
-		*装载UI视图。用于加载模式。
-		*@param path UI资源地址。
-		*/
-		__proto.loadUI=function(path){
-			var uiView=View.uiMap[path];
-			uiView && this.createView(uiView);
-		}
-
-		/**
-		*<p>销毁此对象。</p>
-		*@param destroyChild 是否同时销毁子节点，若值为true,则销毁子节点，否则不销毁子节点。
-		*/
-		__proto.destroy=function(destroyChild){
-			(destroyChild===void 0)&& (destroyChild=true);
-			if (this._aniList)this._aniList.length=0;
-			this._idMap=null;
-			this._aniList=null;
-			laya.ui.Component.prototype.destroy.call(this,destroyChild);
-		}
-
-		View._regs=function(){
-			var key;
-			for (key in View.uiClassMap){
-				ClassUtils.regClass(key,View.uiClassMap[key]);
-			}
-		}
-
-		View.createComp=function(uiView,comp,view){
-			comp=comp || View.getCompInstance(uiView);
-			if (!comp){
-				console.log("can not create:"+uiView.type);
-				return null;
-			};
-			var child=uiView.child;
-			if (child){
-				for (var i=0,n=child.length;i < n;i++){
-					var node=child[i];
-					if (comp.hasOwnProperty("itemRender")&& (node.props.name=="render" || node.props.renderType==="render")){
-						(comp).itemRender=node;
-						}else if (node.type=="Graphic"){
-						ClassUtils.addGraphicsToSprite(node,comp);
-						}else if (ClassUtils.isDrawType(node.type)){
-						ClassUtils.addGraphicToSprite(node,comp,true);
-						}else {
-						var tChild=View.createComp(node,null,view);
-						if (node.type=="Script"){
-							tChild["owner"]=comp;
-							}else if (node.props.renderType=="mask" || node.props.name=="mask"){
-							comp.mask=tChild;
-							}else {(
-							tChild instanceof laya.display.Sprite )&& comp.addChild(tChild);
-						}
-					}
-				}
-			};
-			var props=uiView.props;
-			for (var prop in props){
-				var value=props[prop];
-				View.setCompValue(comp,prop,value,view);
-			}
-			if (Laya.__typeof(comp,'laya.ui.IItem'))(comp).initItems();
-			if (uiView.compId && view && view._idMap){
-				view._idMap[uiView.compId]=comp;
-			}
-			return comp;
-		}
-
-		View.setCompValue=function(comp,prop,value,view){
-			if (prop==="var" && view){
-				view[value]=comp;
-			}
-			else if (prop==="x" || prop==="y" || prop==="width" || prop==="height" || (typeof (comp[prop])=='number')){
-				comp[prop]=parseFloat(value);
-			}
-			else {
-				comp[prop]=(value==="true" ? true :(value==="false" ? false :value))
-			}
-		}
-
-		View.getCompInstance=function(json){
-			var runtime=json.props ? json.props.runtime :"";
-			var compClass;
-			compClass=runtime ? (View.viewClassMap[runtime] || View.uiClassMap[runtime]|| Laya["__classmap"][runtime]):View.uiClassMap[json.type];
-			return compClass ? new compClass():null;
-		}
-
-		View.regComponent=function(key,compClass){
-			View.uiClassMap[key]=compClass;
-			ClassUtils.regClass(key,compClass);
-		}
-
-		View.regViewRuntime=function(key,compClass){
-			View.viewClassMap[key]=compClass;
-		}
-
-		View.uiMap={};
-		View.viewClassMap={};
-		__static(View,
-		['uiClassMap',function(){return this.uiClassMap={"ViewStack":ViewStack,"LinkButton":Button,"TextArea":TextArea,"ColorPicker":ColorPicker,"Box":Box,"Button":Button,"CheckBox":CheckBox,"Clip":Clip,"ComboBox":ComboBox,"Component":Component,"HScrollBar":HScrollBar,"HSlider":HSlider,"Image":Image,"Label":Label,"List":List,"Panel":Panel,"ProgressBar":ProgressBar,"Radio":Radio,"RadioGroup":RadioGroup,"ScrollBar":ScrollBar,"Slider":Slider,"Tab":Tab,"TextInput":TextInput,"View":View,"VScrollBar":VScrollBar,"VSlider":VSlider,"Tree":Tree,"HBox":HBox,"VBox":VBox,"Sprite":Sprite,"Animation":Animation,"Text":Text};}
-		]);
-		View.__init$=function(){
-			View._regs()
-		}
-
-		return View;
-	})(Box)
 
 
 	/**
@@ -4934,6 +5329,7 @@
 			this._cellChanged=false;
 			List.__super.call(this);
 			this._cells=[];
+			this._offset=new Point();
 		}
 
 		__class(List,'laya.ui.List',_super);
@@ -4942,9 +5338,9 @@
 		/**@inheritDoc */
 		__proto.destroy=function(destroyChild){
 			(destroyChild===void 0)&& (destroyChild=true);
-			laya.ui.Component.prototype.destroy.call(this,destroyChild);
 			this._content && this._content.destroy(destroyChild);
 			this._scrollBar && this._scrollBar.destroy(destroyChild);
+			laya.ui.Component.prototype.destroy.call(this,destroyChild);
 			this._content=null;
 			this._scrollBar=null;
 			this._itemRender=null;
@@ -4976,12 +5372,8 @@
 		__proto.changeCells=function(){
 			this._cellChanged=false;
 			if (this._itemRender){
-				for (var i=this._cells.length-1;i >-1;i--){
-					this._cells[i].destroy();
-				}
-				this._cells.length=0;
 				this.scrollBar=this.getChildByName("scrollBar");
-				var cell=this.createItem();
+				var cell=this._getOneCell();
 				var cellWidth=(cell.width+this._spaceX)|| 1;
 				var cellHeight=(cell.height+this._spaceY)|| 1;
 				if (this._width > 0)this._repeatX2=this._isVertical ? Math.round(this._width / cellWidth):Math.ceil(this._width / cellWidth);
@@ -5004,9 +5396,18 @@
 			}
 		}
 
+		__proto._getOneCell=function(){
+			if (this._cells.length===0){
+				var item=this.createItem();
+				this._offset.setTo(item.x,item.y);
+				this._cells.push(item);
+			}
+			return this._cells[0];
+		}
+
 		__proto._createItems=function(startY,numX,numY){
 			var box=this._content;
-			var cell=this.createItem();
+			var cell=this._getOneCell();
 			var cellWidth=cell.width+this._spaceX;
 			var cellHeight=cell.height+this._spaceY;
 			if (this.cacheContent){
@@ -5016,10 +5417,21 @@
 				this._content.addChild(cacheBox);
 				this._content.optimizeScrollRect=true;
 				box=cacheBox;
+			};
+			var arr=[];
+			for (var i=this._cells.length-1;i >-1;i--){
+				var item=this._cells[i];
+				item.removeSelf();
+				arr.push(item);
 			}
+			this._cells.length=0;
 			for (var k=startY;k < numY;k++){
 				for (var l=0;l < numX;l++){
-					cell=this.createItem();
+					if (arr.length){
+						cell=arr.pop();
+						}else {
+						cell=this.createItem();
+					}
 					cell.x=(this._isVertical ? l :k)*cellWidth-box.x;
 					cell.y=(this._isVertical ? k :l)*cellHeight-box.y;
 					cell.name="item"+(k *numX+l);
@@ -5078,12 +5490,10 @@
 		__proto.setContentSize=function(width,height){
 			this._content.width=width;
 			this._content.height=height;
-			if (this._scrollBar){
-				this._content.scrollRect || (this._content.scrollRect=new Rectangle());
-				this._content.scrollRect.setTo(0,0,width,height);
-				this._content.conchModel && this._content.conchModel.scrollRect(0,0,width,height);
-				this.event(/*laya.events.Event.RESIZE*/"resize");
-			}
+			this._content.scrollRect || (this._content.scrollRect=new Rectangle());
+			this._content.scrollRect.setTo(-this._offset.x,-this._offset.y,width,height);
+			this._content.conchModel && this._content.conchModel.scrollRect(-this._offset.x,-this._offset.y,width,height);
+			this.event(/*laya.events.Event.RESIZE*/"resize");
 		}
 
 		/**
@@ -5124,8 +5534,7 @@
 		__proto.changeSize=function(){
 			laya.ui.Component.prototype.changeSize.call(this);
 			this.setContentSize(this.width,this.height);
-			if (this._scrollBar)
-				Laya.timer.once(10,this,this.onScrollBarChange);
+			if (this._scrollBar)this.callLater(this.onScrollBarChange);
 		}
 
 		/**
@@ -5140,8 +5549,9 @@
 			var scrollLine=Math.floor(scrollValue / this._cellSize);
 			if (!this.cacheContent){
 				var index=scrollLine *lineX;
+				var num=0;
 				if (index > this._startIndex){
-					var num=index-this._startIndex;
+					num=index-this._startIndex;
 					var down=true;
 					var toIndex=this._startIndex+lineX *(lineY+1);
 					this._isMoved=true;
@@ -5177,9 +5587,11 @@
 			};
 			var r=this._content.scrollRect;
 			if (this._isVertical){
-				r.y=scrollValue;
+				r.y=scrollValue-this._offset.y;
+				r.x=-this._offset.x;
 				}else {
-				r.x=scrollValue;
+				r.y=-this._offset.y;
+				r.x=scrollValue-this._offset.x;
 			}
 			this._content.conchModel && this._content.conchModel.scrollRect(r.x,r.y,r.width,r.height);
 			this.repaint();
@@ -5394,8 +5806,14 @@
 		__getset(0,__proto,'itemRender',function(){
 			return this._itemRender;
 			},function(value){
-			this._itemRender=value;
-			this._setCellChanged();
+			if (this._itemRender !=value){
+				this._itemRender=value;
+				for (var i=this._cells.length-1;i >-1;i--){
+					this._cells[i].destroy();
+				}
+				this._cells.length=0;
+				this._setCellChanged();
+			}
 		});
 
 		/**
@@ -5465,9 +5883,9 @@
 			if (this._scrollBar !=value){
 				this._scrollBar=value;
 				if (value){
+					this._isVertical=this._scrollBar.isVertical;
 					this.addChild(this._scrollBar);
 					this._scrollBar.on(/*laya.events.Event.CHANGE*/"change",this,this.onScrollBarChange);
-					this._isVertical=this._scrollBar.isVertical;
 				}
 			}
 		});
@@ -5535,7 +5953,7 @@
 		*列表的数据总个数。
 		*/
 		__getset(0,__proto,'length',function(){
-			return this._array.length;
+			return this._array ? this._array.length :0;
 		});
 
 		/**
@@ -5570,6 +5988,7 @@
 			this._selectedIndex=this._selectedIndex < length ? this._selectedIndex :length-1;
 			this.startIndex=this._startIndex;
 			if (this._scrollBar){
+				this._scrollBar.stopScroll();
 				var numX=this._isVertical ? this.repeatX :this.repeatY;
 				var numY=this._isVertical ? this.repeatY :this.repeatX;
 				var lineCount=Math.ceil(length / numX);
@@ -5577,7 +5996,7 @@
 				if (total > 1){
 					this._scrollBar.scrollSize=this._cellSize;
 					this._scrollBar.thumbPercent=numY / lineCount;
-					this._scrollBar.setScroll(0,(lineCount-numY)*this._cellSize+this._cellOffset,this._isVertical ? this._content.scrollRect.y :this._content.scrollRect.x);
+					this._scrollBar.setScroll(0,(lineCount-numY)*this._cellSize+this._cellOffset,this._scrollBar.value);
 					this._scrollBar.target=this._content;
 					}else {
 					this._scrollBar.setScroll(0,0,0);
@@ -6018,66 +6437,6 @@
 
 
 	/**
-	*<code>Radio</code> 控件使用户可在一组互相排斥的选择中做出一种选择。
-	*用户一次只能选择 <code>Radio</code> 组中的一个成员。选择未选中的组成员将取消选择该组中当前所选的 <code>Radio</code> 控件。
-	*@see laya.ui.RadioGroup
-	*/
-	//class laya.ui.Radio extends laya.ui.Button
-	var Radio=(function(_super){
-		function Radio(skin,label){
-			this._value=null;
-			(label===void 0)&& (label="");
-			Radio.__super.call(this,skin,label);
-		}
-
-		__class(Radio,'laya.ui.Radio',_super);
-		var __proto=Radio.prototype;
-		/**@inheritDoc */
-		__proto.destroy=function(destroyChild){
-			(destroyChild===void 0)&& (destroyChild=true);
-			_super.prototype.destroy.call(this,destroyChild);
-			this._value=null;
-		}
-
-		/**@inheritDoc */
-		__proto.preinitialize=function(){
-			laya.ui.Component.prototype.preinitialize.call(this);
-			this.toggle=false;
-			this._autoSize=false;
-		}
-
-		/**@inheritDoc */
-		__proto.initialize=function(){
-			_super.prototype.initialize.call(this);
-			this.createText();
-			this._text.align="left";
-			this._text.valign="top";
-			this._text.width=0;
-			this.on(/*laya.events.Event.CLICK*/"click",this,this.onClick);
-		}
-
-		/**
-		*@private
-		*对象的<code>Event.CLICK</code>事件侦听处理函数。
-		*/
-		__proto.onClick=function(e){
-			this.selected=true;
-		}
-
-		/**
-		*获取或设置 <code>Radio</code> 关联的可选用户定义值。
-		*/
-		__getset(0,__proto,'value',function(){
-			return this._value !=null ? this._value :this.label;
-			},function(obj){
-			this._value=obj;
-		});
-
-		return Radio;
-	})(Button)
-
-
-	/**
 	*<code>Group</code> 是一个可以自动布局的项集合控件。
 	*<p> <code>Group</code> 的默认项对象为 <code>Button</code> 类实例。
 	*<code>Group</code> 是 <code>Tab</code> 和 <code>RadioGroup</code> 的基类。</p>
@@ -6479,6 +6838,66 @@
 
 		return UIGroup;
 	})(Box)
+
+
+	/**
+	*<code>Radio</code> 控件使用户可在一组互相排斥的选择中做出一种选择。
+	*用户一次只能选择 <code>Radio</code> 组中的一个成员。选择未选中的组成员将取消选择该组中当前所选的 <code>Radio</code> 控件。
+	*@see laya.ui.RadioGroup
+	*/
+	//class laya.ui.Radio extends laya.ui.Button
+	var Radio=(function(_super){
+		function Radio(skin,label){
+			this._value=null;
+			(label===void 0)&& (label="");
+			Radio.__super.call(this,skin,label);
+		}
+
+		__class(Radio,'laya.ui.Radio',_super);
+		var __proto=Radio.prototype;
+		/**@inheritDoc */
+		__proto.destroy=function(destroyChild){
+			(destroyChild===void 0)&& (destroyChild=true);
+			_super.prototype.destroy.call(this,destroyChild);
+			this._value=null;
+		}
+
+		/**@inheritDoc */
+		__proto.preinitialize=function(){
+			laya.ui.Component.prototype.preinitialize.call(this);
+			this.toggle=false;
+			this._autoSize=false;
+		}
+
+		/**@inheritDoc */
+		__proto.initialize=function(){
+			_super.prototype.initialize.call(this);
+			this.createText();
+			this._text.align="left";
+			this._text.valign="top";
+			this._text.width=0;
+			this.on(/*laya.events.Event.CLICK*/"click",this,this.onClick);
+		}
+
+		/**
+		*@private
+		*对象的<code>Event.CLICK</code>事件侦听处理函数。
+		*/
+		__proto.onClick=function(e){
+			this.selected=true;
+		}
+
+		/**
+		*获取或设置 <code>Radio</code> 关联的可选用户定义值。
+		*/
+		__getset(0,__proto,'value',function(){
+			return this._value !=null ? this._value :this.label;
+			},function(obj){
+			this._value=obj;
+		});
+
+		return Radio;
+	})(Button)
 
 
 	/**
@@ -6916,6 +7335,7 @@
 			var arrow=e.currentTarget;
 			var index=arrow.tag;
 			this._list.array[index].isOpen=!this._list.array[index].isOpen;
+			this.event(/*laya.events.Event.OPEN*/"open");
 			this._list.array=this.getArray();
 		}
 
@@ -7843,7 +8263,10 @@
 
 
 	/**
-	*<code>Dialog</code> 组件是一个弹出对话框。
+	*<code>Dialog</code> 组件是一个弹出对话框，实现对话框弹出，拖动，模式窗口功能。
+	*可以通过UIConfig设置弹出框背景透明度，模式窗口点击边缘是否关闭等
+	*通过设置zOrder属性，可以更改弹出的层次
+	*通过设置manager.popupEffect和manager.closeEffect可以设置弹出效果和关闭效果
 	*
 	*@example 以下示例代码，创建了一个 <code>Dialog</code> 实例。
 	*<listing version="3.0">
@@ -7977,10 +8400,11 @@
 	*/
 	//class laya.ui.Dialog extends laya.ui.View
 	var Dialog=(function(_super){
-		var DialogManager;
 		function Dialog(){
 			this.popupCenter=true;
 			this.closeHandler=null;
+			this.group=null;
+			this.isModal=false;
 			this._dragArea=null;
 			Dialog.__super.call(this);
 		}
@@ -7989,12 +8413,17 @@
 		var __proto=Dialog.prototype;
 		/**@inheritDoc */
 		__proto.initialize=function(){
+			this._dealDragArea();
+			this.on(/*laya.events.Event.CLICK*/"click",this,this._onClick);
+		}
+
+		/**@private */
+		__proto._dealDragArea=function(){
 			var dragTarget=this.getChildByName("drag");
 			if (dragTarget){
 				this.dragArea=dragTarget.x+","+dragTarget.y+","+dragTarget.width+","+dragTarget.height;
 				dragTarget.removeSelf();
 			}
-			this.on(/*laya.events.Event.CLICK*/"click",this,this._onClick);
 		}
 
 		/**
@@ -8023,7 +8452,7 @@
 		*/
 		__proto.show=function(closeOther){
 			(closeOther===void 0)&& (closeOther=false);
-			Dialog.manager.show(this,closeOther);
+			this._open(false,closeOther);
 		}
 
 		/**
@@ -8032,7 +8461,14 @@
 		*/
 		__proto.popup=function(closeOther){
 			(closeOther===void 0)&& (closeOther=false);
-			Dialog.manager.popup(this,closeOther);
+			this._open(true,closeOther);
+		}
+
+		/**@private */
+		__proto._open=function(modal,closeOther){
+			Dialog.manager.lock(false);
+			this.isModal=modal;
+			Dialog.manager.open(this,closeOther);
 		}
 
 		/**
@@ -8040,13 +8476,10 @@
 		*@param type 如果是点击默认关闭按钮触发，则传入关闭按钮的名字(name)，否则为null。
 		*/
 		__proto.close=function(type){
-			Dialog.manager.close(this);
-			this.closeHandler && this.closeHandler.runWith(type);
+			Dialog.manager.close(this,type);
 		}
 
-		/**
-		*@private
-		*/
+		/**@private */
 		__proto._onMouseDown=function(e){
 			var point=this.getMousePoint();
 			if (this._dragArea.contains(point.x,point.y))this.startDrag();
@@ -8078,19 +8511,42 @@
 
 		/**
 		*弹出框的显示状态；如果弹框处于显示中，则为true，否则为false;
-		*@return
 		*/
 		__getset(0,__proto,'isPopup',function(){
 			return this.parent !=null;
 		});
 
-		/**@private 获取对话框管理器。*/
+		__getset(0,__proto,'zOrder',_super.prototype._$get_zOrder,function(value){
+			_super.prototype._$set_zOrder.call(this,value);
+			Dialog.manager._checkMask();
+		});
+
+		/**对话框管理容器，所有的对话框都在该容器内，并且受管理器管，可以自定义自己的管理器，来更改窗口管理的流程。
+		*任意对话框打开和关闭，都会触发管理类的open和close事件*/
 		__getset(1,Dialog,'manager',function(){
-			return Dialog._manager || (Dialog._manager=new DialogManager());
-		},laya.ui.View._$SET_manager);
+			return Dialog._manager=Dialog._manager|| new DialogManager();
+			},function(value){
+			Dialog._manager=value;
+		});
+
+		Dialog.setLockView=function(view){
+			Dialog.manager.setLockView(view);
+		}
+
+		Dialog.lock=function(value){
+			Dialog.manager.lock(value);
+		}
 
 		Dialog.closeAll=function(){
 			Dialog.manager.closeAll();
+		}
+
+		Dialog.getDialogsByGroup=function(group){
+			return Dialog.manager.getDialogsByGroup(group);
+		}
+
+		Dialog.closeByGround=function(group){
+			return Dialog.manager.closeByGround(group);
 		}
 
 		Dialog.CLOSE="close";
@@ -8100,106 +8556,6 @@
 		Dialog.OK="ok";
 		Dialog.YES="yes";
 		Dialog._manager=null
-		Dialog.__init$=function(){
-			/**
-			*<code>DialogManager</code> 类用来管理对话框。
-			*/
-			//class DialogManager extends laya.display.Sprite
-			DialogManager=(function(_super){
-				function DialogManager(){
-					this._stage=null;
-					DialogManager.__super.call(this);
-					this.dialogLayer=new Sprite();
-					this.modalLayer=new Sprite();
-					this.maskLayer=new Sprite();
-					this.mouseEnabled=this.dialogLayer.mouseEnabled=this.modalLayer.mouseEnabled=this.maskLayer.mouseEnabled=true;
-					this.zOrder=1000;
-					this.addChild(this.dialogLayer);
-					this.addChild(this.modalLayer);
-					this._stage=Laya.stage;
-					this._stage.addChild(this);
-					this._stage.on(/*laya.events.Event.RESIZE*/"resize",this,this.onResize);
-					this.onResize(null);
-				}
-				__class(DialogManager,'',_super);
-				var __proto=DialogManager.prototype;
-				/**
-				*@private
-				*舞台的 <code>Event.RESIZE</code> 事件侦听处理函数。
-				*@param e
-				*/
-				__proto.onResize=function(e){
-					var width=this.maskLayer.width=this._stage.width;
-					var height=this.maskLayer.height=this._stage.height;
-					this.maskLayer.graphics.clear();
-					this.maskLayer.graphics.drawRect(0,0,width,height,UIConfig.popupBgColor);
-					this.maskLayer.alpha=UIConfig.popupBgAlpha;
-					for (var i=this.dialogLayer.numChildren-1;i >-1;i--){
-						var item=this.dialogLayer.getChildAt(i);
-						if (item.popupCenter)this._centerDialog(item);
-					}
-					for (i=this.modalLayer.numChildren-1;i >-1;i--){
-						item=this.modalLayer.getChildAt(i);
-						if (item.isPopup){
-							if (item.popupCenter)this._centerDialog(item);
-						}
-					}
-				}
-				__proto._centerDialog=function(dialog){
-					dialog.x=Math.round(((this._stage.width-dialog.width)>> 1)+dialog.pivotX);
-					dialog.y=Math.round(((this._stage.height-dialog.height)>> 1)+dialog.pivotY);
-				}
-				/**
-				*显示对话框(非模式窗口类型)。
-				*@param dialog 需要显示的对象框 <code>Dialog</code> 实例。
-				*@param closeOther 是否关闭其它对话框，若值为ture，则关闭其它的对话框。
-				*/
-				__proto.show=function(dialog,closeOther){
-					(closeOther===void 0)&& (closeOther=false);
-					if (closeOther)this.dialogLayer.removeChildren();
-					if (dialog.popupCenter)this._centerDialog(dialog);
-					this.dialogLayer.addChild(dialog);
-					this.event(/*laya.events.Event.OPEN*/"open");
-				}
-				/**
-				*显示对话框(模式窗口类型)。
-				*@param dialog 需要显示的对象框 <code>Dialog</code> 实例。
-				*@param closeOther 是否关闭其它对话框，若值为ture，则关闭其它的对话框。
-				*/
-				__proto.popup=function(dialog,closeOther){
-					(closeOther===void 0)&& (closeOther=false);
-					if (closeOther)this.modalLayer.removeChildren();
-					if (dialog.popupCenter)this._centerDialog(dialog);
-					this.modalLayer.addChild(this.maskLayer);
-					this.modalLayer.addChild(dialog);
-					this.event(/*laya.events.Event.OPEN*/"open");
-				}
-				/**
-				*关闭对话框。
-				*@param dialog 需要关闭的对象框 <code>Dialog</code> 实例。
-				*/
-				__proto.close=function(dialog){
-					dialog.removeSelf();
-					if (this.modalLayer.numChildren < 2){
-						this.maskLayer.removeSelf();
-						}else {
-						this.modalLayer.setChildIndex(this.maskLayer,this.modalLayer.numChildren-2);
-					}
-					this.event(/*laya.events.Event.CLOSE*/"close");
-				}
-				/**
-				*关闭所有的对话框。
-				*/
-				__proto.closeAll=function(){
-					this.dialogLayer.removeChildren();
-					this.modalLayer.removeChildren();
-					this.maskLayer.removeSelf();
-					this.event(/*laya.events.Event.CLOSE*/"close");
-				}
-				return DialogManager;
-			})(Sprite)
-		}
-
 		return Dialog;
 	})(View)
 
@@ -8718,5 +9074,77 @@
 	})(TextInput)
 
 
-	Laya.__init([Dialog,View]);
+	/**
+	*异步Dialog的生命周期:show或者popup > onCreate(如果没有创建过)> onOpen > onClose > onDestroy(如果销毁)
+	*onCreate在页面未创建时执行一次，再次打开页面不会再执行，适合写一些只执行一次的逻辑，比如资源加载，节点事件监听
+	*onOpen在页面每次打开都会执行，适合做一些每次都需要处理的事情，比如消息请求，根据数据初始化页面
+	*onClose在每次关闭的时候调用，适合关闭时停止动画，网络消息监听等逻辑
+	*onDestroy在页面被销毁的时候调用，适合置空引用对象
+	*/
+	//class laya.ui.AsynDialog extends laya.ui.Dialog
+	var AsynDialog=(function(_super){
+		function AsynDialog(){
+			this._uiView=null;
+			this.isCloseOther=false;
+			AsynDialog.__super.call(this);
+		}
+
+		__class(AsynDialog,'laya.ui.AsynDialog',_super);
+		var __proto=AsynDialog.prototype;
+		/**@private */
+		__proto.createView=function(uiView){
+			this._uiView=uiView;
+		}
+
+		__proto._open=function(modal,closeOther){
+			this.isModal=modal;
+			this.isCloseOther=closeOther;
+			Dialog.manager.lock(true);
+			if (this._uiView)this.onCreated();
+			else this.onOpen();
+		}
+
+		/**
+		*在页面未创建时执行一次，再次打开页面不会再执行，适合写一些只执行一次的逻辑，比如资源加载，节点事件监听
+		*/
+		__proto.onCreated=function(){
+			laya.ui.View.prototype.createView.call(this,this._uiView);
+			this._uiView=null;
+			this._dealDragArea();
+			this.onOpen();
+		}
+
+		/**
+		*在页面每次打开都会执行，适合做一些每次都需要处理的事情，比如消息请求，根据数据初始化页面
+		*/
+		__proto.onOpen=function(){
+			Dialog.manager.open(this,this.isCloseOther);
+			Dialog.manager.lock(false);
+		}
+
+		__proto.close=function(type){
+			Dialog.manager.close(this);
+			this.onClose();
+		}
+
+		/**
+		*在每次关闭的时候调用，适合关闭时停止动画，网络消息监听等逻辑
+		*/
+		__proto.onClose=function(){}
+		__proto.destroy=function(destroyChild){
+			(destroyChild===void 0)&& (destroyChild=true);
+			laya.ui.View.prototype.destroy.call(this,destroyChild);
+			this._uiView=null;
+			this.onDestroy();
+		}
+
+		/**
+		*在页面被销毁的时候调用，适合置空引用对象
+		*/
+		__proto.onDestroy=function(){}
+		return AsynDialog;
+	})(Dialog)
+
+
+	Laya.__init([View]);
 })(window,document,Laya);

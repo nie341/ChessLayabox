@@ -52,7 +52,7 @@ var GameLoading = (function (_super) {
     //加载完成后的回调函数
     GameLoading.prototype.onLoad = function () {
         // console.log("加载完成");
-        SocketManager.getInstance();
+        // SocketManager.getInstance();
         UIManager.toUI(0 /* Login */);
     };
     return GameLoading;
